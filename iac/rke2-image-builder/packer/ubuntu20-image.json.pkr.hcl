@@ -1,5 +1,5 @@
 source "amazon-ebs" "ubuntu" {
-  ami_name             = "hardened-packer-ubuntu-20"
+  ami_name             = "2-hardened-packer-ubuntu-20"
   instance_type        = "t2.micro"
   region               = "us-east-1"
   source_ami           = "ami-0149b2da6ceec4bb0"
@@ -9,7 +9,7 @@ source "amazon-ebs" "ubuntu" {
   subnet_id            = "subnet-f838619e"
   ssh_username         = "ubuntu"
   tags = {
-    Name           = "hardened-packer-ubuntu-20"
+    Name           = "2-hardened-packer-ubuntu-20"
   }
 }
 
@@ -17,7 +17,7 @@ build {
   sources = ["source.amazon-ebs.ubuntu"]
 
   provisioner "ansible" {
-      playbook_file    = "../ansible/ubuntu20-stig/site.yml"
+      playbook_file    = "../ansible/rke2.yml"
       extra_arguments  = ["-vv"]
     }
 }

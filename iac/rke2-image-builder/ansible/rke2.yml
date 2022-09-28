@@ -1,0 +1,33 @@
+---
+
+- name: Harden and Setup RKE2 host
+  hosts: all
+  become: yes
+  roles:
+    # Perform OS hardening, currently only supports STIGs
+    - role: hardening/redhat
+      when: ansible_facts['distribution'] | lower == 'redhat'
+
+    - role: hardening/ubuntu
+       # Execute the task only if the remote_user is on a Debian OS.
+      when: ansible_facts['distribution'] | lower == 'ubuntu'
+    # Perform kubernetes specific configuration
+    #- common
+
+    # Perform rke2 specific configuration
+    #- rke2
+
+    # Perform gpu specific configuration, when required
+    #- { role: gpu, when: gpu_reqd }
+
+    # Perform aws specific configuration
+    #- aws
+
+    # BigBang/Partybus/tcode Specific Reqs
+    #- bigbang
+
+    # Finalize system preparation and cleanup before baking
+    #- sysprep
+
+    # Configure additional EBS volume and CIS-Compliant Partitions
+    #- lvm

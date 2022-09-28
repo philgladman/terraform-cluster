@@ -1,5 +1,5 @@
 source "amazon-ebs" "rhel" {
-  ami_name             = "hardened-packer-rhel-8"
+  ami_name             = "2-hardened-packer-rhel-8"
   instance_type        = "t2.micro"
   region               = "us-east-1"
   source_ami           = "ami-06640050dc3f556bb"
@@ -9,7 +9,7 @@ source "amazon-ebs" "rhel" {
   subnet_id            = "subnet-f838619e"
   ssh_username         = "ec2-user"
   tags = {
-    Name           = "hardened-packer-rhel-8"
+    Name           = "2-hardened-packer-rhel-8"
   }
 }
 
@@ -17,7 +17,7 @@ build {
   sources = ["source.amazon-ebs.rhel"]
 
   provisioner "ansible" {
-      playbook_file    = "../ansible/rhel8-stig/site.yml"
+      playbook_file    = "../ansible/rke2.yml"
       extra_arguments  = ["-vv"]
     }
 }

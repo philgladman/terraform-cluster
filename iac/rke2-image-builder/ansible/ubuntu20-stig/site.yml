@@ -1,9 +1,0 @@
-- name: Harden and setup host for RKE2
-  hosts: all
-  become: yes
-  gather_facts: no
-  roles:
-  ## Latest STIG for Ubuntu 20
-    - ubuntu2004STIG
-  ## Prepare system for RKE2
-    #- sysprep
