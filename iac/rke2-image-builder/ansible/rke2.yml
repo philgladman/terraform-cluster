@@ -4,24 +4,25 @@
   hosts: all
   become: yes
   roles:
+    # Update OS
+    - update
+    
+    # Perform kubernetes specific configuration
+    - common
+
+    # Perform rke2 specific configuration
+    - rke2
+
+    # Perform aws specific configuration
+    - aws
+
     # Perform OS hardening, currently only supports STIGs
-    - role: hardening/redhat
+    - role: test-redhat
       when: ansible_facts['distribution'] | lower == 'redhat'
 
     - role: hardening/ubuntu
        # Execute the task only if the remote_user is on a Debian OS.
       when: ansible_facts['distribution'] | lower == 'ubuntu'
-    # Perform kubernetes specific configuration
-    #- common
-
-    # Perform rke2 specific configuration
-    #- rke2
-
-    # Perform gpu specific configuration, when required
-    #- { role: gpu, when: gpu_reqd }
-
-    # Perform aws specific configuration
-    #- aws
 
     # BigBang/Partybus/tcode Specific Reqs
     #- bigbang
@@ -31,3 +32,31 @@
 
     # Configure additional EBS volume and CIS-Compliant Partitions
     #- lvm
+   
+   
+
+
+##### working code template
+#    # Perform kubernetes specific configuration
+#    - common
+#
+#    # Perform rke2 specific configuration
+#    - rke2
+#
+#    # Perform gpu specific configuration, when required
+#    - { role: gpu, when: gpu_reqd }
+#
+#    # Perform aws specific configuration
+#    - aws
+#
+#    # Perform OS hardening, currently only supports STIGs
+#    - hardening
+#
+#    # BigBang/Partybus/tcode Specific Reqs
+#    - bigbang
+#
+#    # Finalize system preparation and cleanup before baking
+#    - sysprep
+#
+#    # Configure additional EBS volume and CIS-Compliant Partitions
+#    - lvm

@@ -1,0 +1,11 @@
+---
+
+- name: Update Ubuntu System Package Cache
+  when: ansible_facts['distribution'] | lower == 'ubuntu'
+  apt:
+    update_cache: yes
+
+- name: Update Redhat System Package Cache
+  when: ansible_facts['distribution'] | lower == 'redhat'
+  yum:
+    update_cache: yes

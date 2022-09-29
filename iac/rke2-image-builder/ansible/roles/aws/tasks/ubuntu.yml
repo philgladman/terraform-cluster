@@ -9,6 +9,7 @@
       - vim
       - wget
       - net-tools
+      - libopenscap8
 
 - name: ensure awscli is installed
   block:

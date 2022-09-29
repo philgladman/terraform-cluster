@@ -9,6 +9,7 @@
       - vim
       - wget
       - net-tools
+      #- openscap-scanner
 
 - name: ensure awscli is installed
   block:
