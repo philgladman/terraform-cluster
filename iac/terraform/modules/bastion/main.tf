@@ -27,7 +27,7 @@ resource "aws_security_group" "allow-ssh" {
   tags = var.tags
 }
 
-resource "aws_eip" "lb" {
+resource "aws_eip" "bastion_eip" {
   instance = aws_instance.bastion_instance.id
   vpc      = true
   tags     = var.tags

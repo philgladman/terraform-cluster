@@ -12,7 +12,7 @@ module "vpc" {
   source                       = "terraform-aws-modules/vpc/aws"
   version                      = "3.16.0"
   name                         = local.uname
-  cidr                         = "10.4.0.0/19"
+  cidr                         = "10.4.0.0/16"
   azs                          = slice(data.aws_availability_zones.available.names, 1, 4)
   private_subnets              = local.private_subnets
   public_subnets               = local.public_subnets
@@ -24,7 +24,7 @@ module "vpc" {
   reuse_nat_ips                = false
   create_igw                   = true
   enable_dns_hostnames         = false
-  enable_dns_support           = false
+  enable_dns_support           = true
   public_subnet_suffix         = "public"
   private_subnet_suffix        = "private"
   database_subnet_suffix       = "database"
