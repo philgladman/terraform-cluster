@@ -41,7 +41,7 @@ resource "aws_instance" "bastion_instance" {
   vpc_security_group_ids = ["${aws_security_group.allow-ssh.id}"] 
   subnet_id              = var.bastion_subnet_id
   iam_instance_profile   = aws_iam_instance_profile.bastion-profile-role.name
-  #user_data              = 
+  user_data              = data.cloudinit_config.this.rendered
   tags                   = merge({
     "Name" = "${local.uname}-bastion",
   }, var.tags)
@@ -52,6 +52,8 @@ resource "aws_instance" "bastion_instance" {
     kms_key_id   = var.ebs_kms_key_id
   }
 }
+
+##### Creating and attaching IAM roles and policies
 
 resource "aws_iam_role_policy_attachment" "s3-attachment" {
     role       = aws_iam_role.bastion-role.name
@@ -136,4 +138,18 @@ resource "aws_iam_role" "bastion-role" {
 resource "aws_iam_instance_profile" "bastion-profile-role" {
   name = "${local.uname}-bastion-profile-role"
   role = aws_iam_role.bastion-role.name
+}
+
+#### EC2 Userdata
+
+data "cloudinit_config" "this" {
+  #depends_on    = [aws_eip.bastion_eip[0]]
+  gzip          = true
+  base64_encode = true
+
+  part {
+    filename     = "userdata.sh"
+    content_type = "text/x-shellscript"
+    content = templatefile("${path.module}/files/userdata.sh", {})
+  }
 }
