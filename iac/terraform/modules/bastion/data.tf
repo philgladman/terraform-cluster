@@ -71,12 +71,3 @@ data "aws_iam_policy_document" "cloudwatch_agent_policy_doc" {
 }
 
 data "aws_caller_identity" "current" {}
-
-#data "aws_iam_policy" "amazon_ec2_role_for_ssm" {
-#  arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
-#}
-#
-#
-#data "aws_iam_policy" "cloudwatch_agent_server_policy" {
-#  arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
-#}

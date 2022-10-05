@@ -33,6 +33,6 @@
         ]
       }
     },
-    "log_stream_name": "{instance_id}"
+    "log_stream_name": "${uname}/{instance_id}"
   }    
 }

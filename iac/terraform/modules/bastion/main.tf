@@ -35,7 +35,9 @@ resource "aws_ssm_parameter" "cloudwatch_agent" {
   description = "Cloudwatch agent config to configure custom log"
   name        = var.cloudwatch_agent_ssm_name
   type        = "SecureString"
-  value       = file("files/cloudwatch_agent_config.json")
+  value       = templatefile("${path.module}/files/cloudwatch_agent_config.json", {
+      uname = local.uname
+    })
 }
 
 resource "aws_eip" "bastion_eip" {
