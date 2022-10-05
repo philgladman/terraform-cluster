@@ -31,3 +31,23 @@ variable "ebs_kms_key_arn" {
   type = string
   default = ""
 }
+
+variable "region" {
+  type        = string
+  default     = ""
+}
+
+variable "cloudwatch_agent_ssm_name" {
+  type        = string
+  default     = ""
+}
+
+variable "bastion_ami" {
+  type        = string
+  default     = ""
+}
+
+variable "instance_type" {
+  type        = string
+  default     = ""
+}
