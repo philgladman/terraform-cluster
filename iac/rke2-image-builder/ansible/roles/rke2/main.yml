@@ -1,4 +1,0 @@
----
-
-- name: download and run RKE2 installer
-  shell: curl -sfL https://get.rke2.io | sudo sh -

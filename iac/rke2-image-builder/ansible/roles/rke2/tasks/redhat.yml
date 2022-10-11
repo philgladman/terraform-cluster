@@ -1,0 +1,89 @@
+---
+
+# create etcd user
+# - name: Create etcd user for Hardened cluster
+#   shell: useradd -r -c 'etcd user' -s /sbin/nologin -M etcd -U
+
+- name: Add RKE2 yum repo (1/2)
+  yum_repository:
+    file: rancher-rke2-1-23-latest
+    name: Rancher-RKE2-Common-Latest
+    description: rancher-rke2-common-latest
+    baseurl: https://rpm.rancher.io/rke2/latest/common/centos/8/noarch
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: https://rpm.rancher.io/public.key
+
+- name: Add RKE2 yum repo (2/2)
+  yum_repository:
+    file: rancher-rke2-1-23-latest
+    name: Rancher-RKE2-1.23-Latest
+    description: rancher-rke2-1-23-latest
+    baseurl: https://rpm.rancher.io/rke2/latest/1.23/centos/8/x86_64
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: https://rpm.rancher.io/public.key
+
+- name: Create NetworkManager configuration file for rke2-canal
+  copy: 
+    dest: "/etc/NetworkManager/conf.d/rke2-canal.conf"
+    content: |
+      [keyfile]
+      unmanaged-devices=interface-name:cali*;interface-name:flannel*
+
+- name: Reload NetworkManager
+  shell: systemctl reload NetworkManager
+
+- name: Update Kernel configs for RKE2
+  copy: 
+    dest: "/etc/sysctl.d/90-kubelet.conf"
+    content: |
+      vm.panic_on_oom=0
+      vm.overcommit_memory=1
+      kernel.panic=10
+      kernel.panic_on_oops=1
+      kernel.keys.root_maxbytes=25000000
+
+- name: Restart sysctl
+  shell: sysctl -p /etc/sysctl.d/90-kubelet.conf
+
+- name: Install RKE2
+  dnf:
+    name: rke2*
+
+- name: Ensure RKE2 packages are installed
+  dnf: 
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - rke2*
+
+
+
+# - name: Get RKE2-Server installer
+#   get_url:
+#     url: https://get.rke2.io
+#     dest: /tmp/rke2-server-install.sh
+#     mode: '0755'
+
+# - name: Get RKE2-Agent installer
+#   get_url:
+#     url: https://get.rke2.io
+#     dest: /tmp/rke2-agent-install.sh
+#     mode: '0755'
+
+# - name: Run RKE2 installer as server
+#   shell: /tmp/rke2-server-install.sh
+#   environment:
+#     INSTALL_RKE2_VERSION: "{{ rke2_version }}"
+#     INSTALL_RKE2_METHOD: "{{ rke2_method }}"
+#     INSTALL_RKE2_TYPE: server
+
+# # Run the  yum installer twice to mimic how tar works since we want a single image for server _and_ agent
+# # NOTE: The logic for creating a server or agent is delegated to the implementor
+# - name: Run RKE2 installer as agent
+#   shell: /tmp/rke2-agent-install.sh
+#   environment:
+#     INSTALL_RKE2_VERSION: "{{ rke2_version }}"
+#     INSTALL_RKE2_METHOD: "{{ rke2_method }}"
+#     INSTALL_RKE2_TYPE: agent

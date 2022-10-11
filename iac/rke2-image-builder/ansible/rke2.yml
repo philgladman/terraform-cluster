@@ -4,9 +4,6 @@
   hosts: all
   become: yes
   roles:
-    # Update OS
-    - update
-    
     # Perform kubernetes specific configuration
     - common
 
@@ -23,6 +20,9 @@
     - role: hardening/ubuntu
        # Execute the task only if the remote_user is on a Debian OS.
       when: ansible_facts['distribution'] | lower == 'ubuntu'
+
+    # Update OS
+    - update
 
     # BigBang/Partybus/tcode Specific Reqs
     #- bigbang
