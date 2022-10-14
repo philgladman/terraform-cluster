@@ -12,3 +12,8 @@ variable "region" {
   type        = string
   default     = "us-east-1"
 }
+
+variable "master_private_key_ssm_parameter_arn" {
+  type        = string
+  default     = ""
+}

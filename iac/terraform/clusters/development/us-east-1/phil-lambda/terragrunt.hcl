@@ -14,13 +14,19 @@ include {
 dependencies {
   paths = [
     "..//vpc",
-    "..//sops"
+    "..//sops",
+    "..//master-pem"
   ]
 }
 
+dependency "master-pem" {
+  config_path = "..//master-pem"
+}
+
 inputs = {
-resource_name  = "phil-${local.common.locals.env_name}"
-region         = local.region.locals.region
+resource_name                          = "phil-${local.common.locals.env_name}"
+region                                 = local.region.locals.region
+master_private_key_ssm_parameter_arn   = dependency.master-pem.outputs.master_private_key_ssm_parameter_arn
 
   tags = {
     Environment  = "${local.common.locals.env_name}"
