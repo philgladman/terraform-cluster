@@ -32,10 +32,14 @@ module "lambda_function" {
   description   = "Lambda function to run deploy.sh on clusters after the are spun back up"
   handler       = "k8s_deploy.lambda_handler"
   runtime       = "python3.8"
-  source_path   = ["files/"]
+  #source_path = ["files/k8s_deploy/k8s_deploy.py"]
   #role_name     = aws_iam_role.k8s_deploy_lambda_role.name
   create_role   = true 
   timeout       = "15"
+  source_path = [{
+    path             = "files/k8s_deploy/"
+    #pip_requirements = "files/k8s_deploy/requirements.txt"
+  }]
   environment_variables = {
     aws_region = "${var.region}"
   }
@@ -44,6 +48,23 @@ module "lambda_function" {
     "Name" = "${local.uname}-k8s-deploy",
     }, var.tags)
 }
+
+# resource "aws_lambda_layer_version" "paramiko_lambda_layer" {
+#   filename   = "${path.module}/files/paramiko.zip"
+#   layer_name = "paramiko"
+
+#   compatible_runtimes = ["python3.8"]
+# }
+
+# resource "aws_lambda_function" "k8s_deploy" {
+#   filename        = "${path.module}/files/my-deployment-package.zip"
+#   function_name   = "k8s_deploy"
+#   role            = aws_iam_role.k8s_deploy_lambda_role.arn
+#   handler         = "k8s_deploy.lambda_handler"
+#   runtime         = "python3.8"
+#   depends_on      = [aws_iam_role_policy_attachment.k8s_deploy_policy_attachment]
+#   # layers          = [aws_lambda_layer_version.paramiko_lambda_layer.arn]
+# }
 
 # resource "aws_iam_role" "k8s_deploy_lambda_role" {
 # name               = "${local.uname}-k8s-deploy-lambda-role"
