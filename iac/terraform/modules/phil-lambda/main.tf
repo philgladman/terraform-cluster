@@ -33,15 +33,10 @@ module "lambda_function" {
   handler       = "k8s_deploy.lambda_handler"
   runtime       = "python3.8"
   source_path   = ["k8s_deploy/k8s_deploy.py"]
-  #role_name     = aws_iam_role.k8s_deploy_lambda_role.name
   create_role   = true 
   timeout       = "15"
-  layers        = [module.lambda_layer_s3.lambda_layer_arn]
-  depends_on    = [module.lambda_layer_s3]
-  # source_path = [{
-  #   path             = "k8s_deploy/"
-  #   #pip_requirements = "files/k8s_deploy/requirements.txt"
-  # }]
+  layers        = [aws_lambda_layer_version.paramiko_lambda_layer.arn]
+
   environment_variables = {
     aws_region = "${var.region}"
   }
@@ -51,26 +46,26 @@ module "lambda_function" {
     }, var.tags)
 }
 
-module "lambda_layer_s3" {
-  source = "terraform-aws-modules/lambda/aws"
+# module "lambda_layer_s3" {
+#   source = "terraform-aws-modules/lambda/aws"
 
-  create_layer = true
+#   create_layer = true
 
-  layer_name          = "paramiko-layer-terraform-s3"
-  description         = "My amazing lambda layer (deployed from S3)"
-  compatible_runtimes = ["python3.8"]
-
-  source_path = "k8s_deploy/paramiko-layer/layer.zip"
-
-  store_on_s3 = true
-  s3_bucket   = "test-bucket-phil-sully-gus"
-}
-# resource "aws_lambda_layer_version" "paramiko_lambda_layer" {
-#   filename   = "k8s_deploy/paramiko-layer/layer.zip"
-#   layer_name = "paramiko-layer-terraform-3"
-
+#   layer_name          = "paramiko-layer-terraform-s3"
+#   description         = "My amazing lambda layer (deployed from S3)"
 #   compatible_runtimes = ["python3.8"]
+
+#   source_path = "k8s_deploy/paramiko-layer/layer.zip"
+
+#   store_on_s3 = true
+#   s3_bucket   = "test-bucket-phil-sully-gus"
 # }
+resource "aws_lambda_layer_version" "paramiko_lambda_layer" {
+  filename   = "k8s_deploy/paramiko-layer/layer.zip"
+  layer_name = "paramiko-layer-terraform-3"
+
+  compatible_runtimes = ["python3.8"]
+}
 
 # resource "aws_lambda_function" "k8s_deploy" {
 #   filename        = "${path.module}/files/my-deployment-package.zip"
@@ -147,12 +142,12 @@ resource "aws_ssm_parameter" "github_username" {
   description = "github username"
   name        = "${local.uname}-github-username"
   type        = "SecureString"
-  value       = "philgladman"
+  value       = "CHANGE-WITH-YOUR-USERNAME"
 }
 
 resource "aws_ssm_parameter" "github_pat" {
   description = "github PAT"
   name        = "${local.uname}-github-pat"
   type        = "SecureString"
-  value       = "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"
+  value       = "CHANGE-WITH-YOUR-PAT"
 }
