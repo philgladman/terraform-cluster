@@ -4,7 +4,7 @@ echo "starting userdata"
 
 ## install tools
 echo "installing tools"
-sudo yum install -y curl wget unzip
+sudo yum install -y curl wget unzip git
 
 # download awscli
 echo "installing awscli"
