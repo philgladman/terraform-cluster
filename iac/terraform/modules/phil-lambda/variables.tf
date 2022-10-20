@@ -17,3 +17,23 @@ variable "master_private_key_ssm_parameter_arn" {
   type        = string
   default     = ""
 }
+
+variable "ebs_kms_key_id" {
+  type = string
+  default = ""
+}
+
+variable "ebs_kms_key_arn" {
+  type = string
+  default = ""
+}
+
+variable "github_username" {
+  type = string
+  default = ""
+}
+
+variable "github_pat" {
+  type = string
+  default = ""
+}

@@ -33,13 +33,27 @@ def lambda_handler(event, context):
     resp = ''.join(outlines)
     print(resp)
 
-    # Run command 2 on the bastion and output response
+    # # Run command 2 on the bastion and output response
+    # get_kubeconfig_command = "aws s3 cp s3://test-bucket-phil-sully-gus/test.txt ."
+    # stdin, stdout, stderr = ssh.exec_command(get_kubeconfig_command)
+    # outlines = stdout.readlines()
+    # resp = ''.join(outlines)
+    # print(resp)
+
+    # node_readiness_command = get_node_readiness_script()
+    # # Run command 3 on the bastion and output response
+    # stdin, stdout, stderr = ssh.exec_command('/bin/sh -c "echo ' + node_readiness_command + '"')
+    # outlines = stdout.readlines()
+    # resp = ''.join(outlines)
+    # print(resp)
+
+    # Run command 4 on the bastion and output response
     stdin, stdout, stderr = ssh.exec_command('cat /tmp/tcode/k8s/deploy.sh')
     outlines = stdout.readlines()
     resp = ''.join(outlines)
     print(resp)
 
-    # Run command 3 on the bastion and output response
+    # Run command 5 on the bastion and output response
     stdin, stdout, stderr = ssh.exec_command('rm -rf /tmp/tcode')
     outlines = stdout.readlines()
     resp = ''.join(outlines)
@@ -108,6 +122,19 @@ def get_github_pat():
     )
     github_pat = jmespath.search('Parameter.Value', github_pat_parameter)
     return github_pat
+
+
+def get_node_readiness_script():
+    """Get node readiness probe script from AWS SSM Parameter Store and store as a file on Lambda box"""
+
+    node_readiness_parameter = SSM_CLIENT.get_parameter(
+        Name='phil-dev-node-readiness',
+        WithDecryption=True
+    )
+
+    node_readiness = jmespath.search('Parameter.Value', node_readiness_parameter)
+    return node_readiness
+
 
 # if __name__ == "__main__":
 #    lambda_handler()
