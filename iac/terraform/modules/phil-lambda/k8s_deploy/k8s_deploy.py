@@ -3,6 +3,8 @@ import os
 import boto3
 import jmespath
 import paramiko
+from scp import SCPClient
+
 
 # make this into env variable
 region = os.environ.get('aws_region')
@@ -22,6 +24,7 @@ def lambda_handler(event, context):
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     pkey = paramiko.RSAKey.from_private_key_file("/tmp/test.txt")
     ssh.connect(bastion_public_ip, username="ec2-user", pkey=pkey)
+    scp = SCPClient(ssh.get_transport())
 
     # Run command 1 on the bastion and output response
     github_username = get_github_username()
@@ -32,32 +35,50 @@ def lambda_handler(event, context):
     outlines = stdout.readlines()
     resp = ''.join(outlines)
     print(resp)
+    print("end of command 1")
 
-    # # Run command 2 on the bastion and output response
-    # get_kubeconfig_command = "aws s3 cp s3://test-bucket-phil-sully-gus/test.txt ."
-    # stdin, stdout, stderr = ssh.exec_command(get_kubeconfig_command)
-    # outlines = stdout.readlines()
-    # resp = ''.join(outlines)
-    # print(resp)
+    # Run command 2 on the bastion and output response
+    get_kubeconfig_command = "aws s3 cp s3://test-bucket-phil-sully-gus/test.txt ."
+    stdin, stdout, stderr = ssh.exec_command(get_kubeconfig_command)
+    outlines = stdout.readlines()
+    resp = ''.join(outlines)
+    print(resp)
+    print("end of command 2")
 
-    # node_readiness_command = get_node_readiness_script()
-    # # Run command 3 on the bastion and output response
-    # stdin, stdout, stderr = ssh.exec_command('/bin/sh -c "echo ' + node_readiness_command + '"')
-    # outlines = stdout.readlines()
-    # resp = ''.join(outlines)
-    # print(resp)
+    # Run command 3 on the bastion and output response
+    get_node_readiness_script()
+    scp.put('/tmp/node-readiness.sh')
+    scp.close()
+    print("end of command 3")
 
     # Run command 4 on the bastion and output response
+    stdin, stdout, stderr = ssh.exec_command('/bin/sh /home/ec2-user/node-readiness.sh')
+    outlines = stdout.readlines()
+    resp = ''.join(outlines)
+    print(resp)
+    print("end of command 4")
+
+    # Run command 5 on the bastion and output response
     stdin, stdout, stderr = ssh.exec_command('cat /tmp/tcode/k8s/deploy.sh')
     outlines = stdout.readlines()
     resp = ''.join(outlines)
     print(resp)
+    print("end of command 5")
 
-    # Run command 5 on the bastion and output response
+    # Run command 6 on the bastion and output response
     stdin, stdout, stderr = ssh.exec_command('rm -rf /tmp/tcode')
     outlines = stdout.readlines()
     resp = ''.join(outlines)
     print(resp)
+    print("end of command 6")
+
+    # Run command 7 on the bastion and output response
+    stdin, stdout, stderr = ssh.exec_command('rm -rf /home/ec2-user/node-readiness.sh')
+    outlines = stdout.readlines()
+    resp = ''.join(outlines)
+    print(resp)
+    print("end of command 7")
+
 
     # Close ssh connection
     ssh.close()
@@ -132,8 +153,13 @@ def get_node_readiness_script():
         WithDecryption=True
     )
 
-    node_readiness = jmespath.search('Parameter.Value', node_readiness_parameter)
-    return node_readiness
+    try:
+        node_readiness = jmespath.search('Parameter.Value', node_readiness_parameter)
+        with open("/tmp/node-readiness.sh", "w") as f:
+            f.write(node_readiness)
+            print("Key has been written to file")
+    except IOError as e:
+        print("I/0 error ({0}): {1}".format(e.errno, e.strerror))
 
 
 # if __name__ == "__main__":

@@ -13,8 +13,8 @@ module "lambda_function" {
   runtime          = "python3.8"
   source_path      = ["k8s_deploy/k8s_deploy.py"]
   create_role      = true 
-  timeout          = "15"
-  layers           = [aws_lambda_layer_version.paramiko_lambda_layer.arn]
+  timeout          = "60"
+  layers           = [aws_lambda_layer_version.paramiko_lambda_layer.arn,aws_lambda_layer_version.scp_lambda_layer.arn]
   publish          = true
   allowed_triggers = {
     S3Trigger = {
@@ -36,6 +36,13 @@ module "lambda_function" {
 resource "aws_lambda_layer_version" "paramiko_lambda_layer" {
   filename   = "k8s_deploy/paramiko-layer/layer.zip"
   layer_name = "${local.uname}-paramiko-layer"
+
+  compatible_runtimes = ["python3.8"]
+}
+
+resource "aws_lambda_layer_version" "scp_lambda_layer" {
+  filename   = "k8s_deploy/scp-layer/layer.zip"
+  layer_name = "${local.uname}-scp-layer"
 
   compatible_runtimes = ["python3.8"]
 }
@@ -107,7 +114,7 @@ num_nodes_ready=0
 
 while [[ $num_nodes_ready -ne $num_nodes_ready_succcess ]]
 do
-	echo "$num_nodes_ready/4 nodes are ready"
+	echo "$num_nodes_ready/4 nodes are ready" >> /tmp/node-readiness-output.txt
 	sleep 2
 	num_nodes_ready=$((num_nodes_ready+1))
 done
