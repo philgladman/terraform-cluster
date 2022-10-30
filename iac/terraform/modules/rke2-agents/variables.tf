@@ -56,8 +56,27 @@ variable "bastion_security_group_id" {
   default = ""
 }
 
+variable "controlplane_security_group_id" {
+  default = ""
+}
+
 variable "is_agent" {
   type        = bool
   default     = null
   description = "true for an agent, and false for controlplane"
+}
+
+variable "token_bucket_id" {
+  type        = string
+  default     = ""
+}
+
+variable "token_bucket_arn" {
+  type        = string
+  default     = ""
+}
+
+variable "token_object_id" {
+  type        = string
+  default     = ""
 }

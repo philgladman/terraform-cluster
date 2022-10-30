@@ -41,6 +41,7 @@ inputs = {
   region                     = local.region.locals.region
   cloudwatch_agent_ssm_name  = "phil-${local.common.locals.env_name}-cloudwatch-agent-config"
   bastion_security_group_id  = dependency.bastion.outputs.bastion_security_group_id
+  is_agent                   = false
 
 
 

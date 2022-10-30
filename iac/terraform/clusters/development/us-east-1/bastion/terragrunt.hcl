@@ -36,7 +36,6 @@ inputs = {
   region                     = local.region.locals.region
   cloudwatch_agent_ssm_name  = "phil-${local.common.locals.env_name}-cloudwatch-agent-config"
 
-
   tags = {
     Environment  = "${local.common.locals.env_name}"
     Region       = "${local.region.locals.region}"

@@ -23,6 +23,14 @@ resource "aws_security_group" "allow-ssh-from-bastion" {
     security_groups  = ["${var.bastion_security_group_id}"]
   }
 
+  ingress {
+    description      = "Allow all access"
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port        = 0
     to_port          = 0
@@ -33,9 +41,55 @@ resource "aws_security_group" "allow-ssh-from-bastion" {
   tags = var.tags
 }
 
-#
-# SSM Paramater for cloudwatch agent
-#
+resource "random_password" "cluster_token" {
+  length  = 40
+  special = false
+}
+
+resource "random_password" "cluster_bucket_name_suffix" {
+  length  = 10
+  special = false
+  upper   = false
+}
+
+/* resource "aws_ssm_parameter" "cluster_token" {
+  description = "Rke2 cluster join token"
+  name        = "${local.uname}-cluster-token"
+  type        = "SecureString"
+  value       = random_password.cluster_token
+} */
+
+resource "aws_s3_bucket" "cluster_bucket" {
+  bucket = "${local.uname}-cluster-${random_password.cluster_bucket_name_suffix.result}"
+  tags   = var.tags
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "aws_s3_object" "cluster_token" {
+  bucket                 = aws_s3_bucket.cluster_bucket.id
+  key                    = "token"
+  content_type           = "text/plain"
+  content                = random_password.cluster_token.result
+  server_side_encryption = "aws:kms"
+  tags                   = var.tags
+}
+
+resource "aws_s3_bucket_public_access_block" "restrict_s3_bucket" {
+  bucket                  = aws_s3_bucket.cluster_bucket.id
+  block_public_acls       = true
+  ignore_public_acls      = true
+  block_public_policy     = true
+  restrict_public_buckets = true
+}
+
+/* resource "aws_iam_policy" "s3_accessor" {
+  name        = "${local.uname}-cluster-s3-access"
+  description = "S3 access to store backup files"
+  policy      = data.aws_iam_policy_document.s3_access.json
+  tags        = var.tags
+} */
 
 resource "aws_instance" "controlplane_instance" {
   ami                    = var.source_ami

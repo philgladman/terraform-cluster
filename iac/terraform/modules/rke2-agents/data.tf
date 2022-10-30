@@ -8,13 +8,13 @@ data "cloudinit_config" "this" {
     content = templatefile("${path.module}/files/userdata.sh", {
       ssm_cloudwatch_config   = var.cloudwatch_agent_ssm_name
       type                    = var.is_agent ? "agent" : "server"
-      token_bucket            = aws_s3_bucket.cluster_bucket.id
-      token_object            = aws_s3_object.cluster_token.id
+      token_bucket            = var.token_bucket_id
+      token_object            = var.token_object_id
     })
   }
 }
 
-data "aws_iam_policy_document" "assume-controlplane-role" {
+data "aws_iam_policy_document" "assume-agent-role" {
   statement {
     actions = ["sts:AssumeRole"]
 
@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "s3_access_policy_doc" {
       "s3:GetBucketLocation"
     ]
 
-    resources = [aws_s3_bucket.cluster_bucket.arn, "${aws_s3_bucket.cluster_bucket.arn}/*"]
+    resources = [var.token_bucket_arn, "${var.token_bucket_arn}/*"]
   }
 
   statement {
@@ -59,7 +59,7 @@ data "aws_iam_policy_document" "s3_access_policy_doc" {
       "s3:ListAllMyBuckets"
     ]
 
-    resources = [replace(aws_s3_bucket.cluster_bucket.arn, aws_s3_bucket.cluster_bucket.id, "*")]
+    resources = [replace(var.token_bucket_arn, var.token_bucket_id, "*")]
   }
 
   statement {
