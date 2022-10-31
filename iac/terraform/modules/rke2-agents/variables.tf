@@ -7,9 +7,8 @@ variable "tags" {
   type = map(string)
 }
 
-variable "rke2_subnet_id" {
-  type = string
-  default = ""
+variable "rke2_subnet_ids" {
+  type = list(string)
 }
 
 variable "master_ssh_key_name" {
@@ -47,7 +46,7 @@ variable "source_ami" {
   default     = ""
 }
 
-variable "instance_type" {
+variable "agent_instance_type" {
   type        = string
   default     = ""
 }
@@ -79,4 +78,21 @@ variable "token_bucket_arn" {
 variable "token_object_id" {
   type        = string
   default     = ""
+}
+
+variable "wait_for_capacity_timeout" {
+  description = "How long Terraform should wait for ASG instances to be healthy before timing out."
+  type        = string
+  default     = "10m"
+}
+
+variable "spot" {
+  default = false
+  type    = bool
+}
+
+variable "instance_refresh" {
+  description = "If this block is configured, start an Instance Refresh when this Auto Scaling Group is updated"
+  type        = any
+  default     = {}
 }

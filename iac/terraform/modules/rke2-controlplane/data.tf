@@ -1,3 +1,7 @@
+data "aws_iam_role" "default_asg" {
+  name = "AWSServiceRoleForAutoScaling"
+}
+
 data "cloudinit_config" "this" {
   gzip          = true
   base64_encode = true

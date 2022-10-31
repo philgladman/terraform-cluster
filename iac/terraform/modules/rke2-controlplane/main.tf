@@ -2,9 +2,9 @@ locals {
   uname             = lower(var.resource_name)
 }
 
-resource "aws_security_group" "allow-ssh-from-bastion" {
-  name        = "${local.uname}-allow-ssh-from-bastion"
-  description = "Allow SSH inbound traffic from bastion host"
+resource "aws_security_group" "controlplane_sg" {
+  name        = "${local.uname}-controlplan-sg"
+  description = "Controlplane security group"
   vpc_id      = var.vpc_id
 
   ingress {
@@ -16,19 +16,11 @@ resource "aws_security_group" "allow-ssh-from-bastion" {
   }
 
   ingress {
-    description      = "Allow all access from bastion"
+    description      = "Allow all from bastion"
     from_port        = 0
     to_port          = 0
     protocol         = "-1"
     security_groups  = ["${var.bastion_security_group_id}"]
-  }
-
-  ingress {
-    description      = "Allow all access"
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
   }
 
   egress {
@@ -84,20 +76,17 @@ resource "aws_s3_bucket_public_access_block" "restrict_s3_bucket" {
   restrict_public_buckets = true
 }
 
-/* resource "aws_iam_policy" "s3_accessor" {
-  name        = "${local.uname}-cluster-s3-access"
-  description = "S3 access to store backup files"
-  policy      = data.aws_iam_policy_document.s3_access.json
-  tags        = var.tags
-} */
+#
+## Create 1 controlplane without ASG
+#
 
 resource "aws_instance" "controlplane_instance" {
   ami                    = var.source_ami
-  instance_type          = var.instance_type
+  instance_type          = var.controlplane_instance_type
   key_name               = var.master_ssh_key_name
   monitoring             = true
-  vpc_security_group_ids = ["${aws_security_group.allow-ssh-from-bastion.id}"] 
-  subnet_id              = var.rke2_subnet_id
+  vpc_security_group_ids = ["${aws_security_group.controlplane_sg.id}"] 
+  subnet_id              = var.rke2_subnet_ids[0]
   iam_instance_profile   = aws_iam_instance_profile.controlplane-profile-role.name
   user_data              = data.cloudinit_config.this.rendered
   tags                   = merge({
@@ -107,9 +96,13 @@ resource "aws_instance" "controlplane_instance" {
   root_block_device {
     volume_size = 20
     encrypted   = true
-    kms_key_id   = var.ebs_kms_key_id
+    kms_key_id   = var.ebs_kms_key_arn
   }
 }
+
+#
+## Create controlplane with ASG
+#
 
 ##### Creating and attaching IAM roles and policies
 
@@ -170,4 +163,12 @@ resource "aws_iam_role" "controlplane-role" {
 resource "aws_iam_instance_profile" "controlplane-profile-role" {
   name = "${local.uname}-controlplane-profile-role"
   role = aws_iam_role.controlplane-role.name
+}
+
+resource "aws_kms_grant" "ebs_kms_grant" {
+  name              = "ebskey-grant-access"
+  key_id            = var.ebs_kms_key_arn
+  grantee_principal = data.aws_iam_role.default_asg.arn
+  operations        = ["Encrypt", "Decrypt", "GenerateDataKey", "CreateGrant", "DescribeKey", "ReEncryptFrom", "ReEncryptTo", "GenerateDataKeyWithoutPlaintext"]
+
 }

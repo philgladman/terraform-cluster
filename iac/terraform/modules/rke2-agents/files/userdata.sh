@@ -105,8 +105,8 @@ fetch_token() {
   # Either
   #   a) fetch token from s3 bucket
   #   b) fail
-  #if token=$(aws s3 cp "s3://${token_bucket}/${token_object}" - 2>/dev/null);then
-  if token=$(aws s3 cp "s3://${token_bucket}/generated-token" - 2>/dev/null);then
+  if token=$(aws s3 cp "s3://${token_bucket}/${token_object}" - 2>/dev/null);then
+  #if token=$(aws s3 cp "s3://${token_bucket}/generated-token" - 2>/dev/null);then
     info "Found token from s3 object"
   else
     fatal "Could not find cluster token from s3"
@@ -157,12 +157,12 @@ start_rke2() {
     export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
     export PATH=$PATH:/var/lib/rancher/rke2/bin
 
-    put_token
+    #put_token
     upload
   fi
   
   if [ $TYPE == "agent" ]; then
-    fetch_token
+    #fetch_token
     get_server_url
     append_config "server: https://$server_url:9345"
     
@@ -178,7 +178,7 @@ start_rke2() {
 #info "sleeping for 10 secs"
 #sleep 10
 config
-#fetch_token
+fetch_token
 #get_server_url
 #append_config 'cloud-provider-name: "aws"'
 #append_config "server: https://$server_url:9345"

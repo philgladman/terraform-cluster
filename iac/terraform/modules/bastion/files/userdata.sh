@@ -4,7 +4,7 @@ echo "starting userdata"
 
 ## install tools
 echo "installing tools"
-sudo yum install -y curl wget unzip git vim
+sudo yum install -y curl wget unzip git vim jq
 
 # download awscli
 echo "installing awscli"
@@ -31,5 +31,9 @@ sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 mkdir -p /home/ec2-user/.kube && chown ec2-user:ec2-user -R /home/ec2-user/.kube
 rm kubectl
 echo "kubectl installed and kube dir created"
+
+# Download master key from SSM Parameter store
+echo -e $(aws ssm get-parameter --name ${MASTER_KEY_SSM_NAME} --with-decryption | jq '.[].Value' | cut -d '"' -f 2) > /home/ec2-user/.ssh/master-key && chown ec2-user:ec2-user /home/ec2-user/.ssh/master-key && chmod 600 /home/ec2-user/.ssh/master-key
+echo "master key downloaded"
 
 echo "userdata complete"

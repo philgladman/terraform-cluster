@@ -5,3 +5,7 @@ output "master_ssh_key_name" {
 output "master_private_key_ssm_parameter_arn" {
   value = aws_ssm_parameter.private_key.arn
 }
+
+output "master_key_ssm_name" {
+  value = aws_ssm_parameter.private_key.name
+}

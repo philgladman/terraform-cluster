@@ -7,7 +7,7 @@ output "EIP_bastion_public_ip" {
 }
 
 output "bastion_security_group_id" {
-  value = aws_security_group.allow-ssh.id
+  value = aws_security_group.bastion_sg.id
 }
 
 # rke2_subnet_id

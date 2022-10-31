@@ -2,9 +2,9 @@ locals {
   uname             = lower(var.resource_name)
 }
 
-resource "aws_security_group" "allow-ssh" {
-  name        = "${local.uname}-allow-ssh"
-  description = "Allow SSH inbound traffic"
+resource "aws_security_group" "bastion_sg" {
+  name        = "${local.uname}-bastion-sg"
+  description = "Bastion security group"
   vpc_id      = var.vpc_id
 
   ingress {
@@ -49,7 +49,7 @@ resource "aws_instance" "bastion_instance" {
   instance_type          = var.instance_type
   key_name               = var.master_ssh_key_name
   monitoring             = true
-  vpc_security_group_ids = ["${aws_security_group.allow-ssh.id}"] 
+  vpc_security_group_ids = ["${aws_security_group.bastion_sg.id}"] 
   subnet_id              = var.bastion_subnet_id
   iam_instance_profile   = aws_iam_instance_profile.bastion-profile-role.name
   user_data              = data.cloudinit_config.this.rendered
@@ -60,7 +60,7 @@ resource "aws_instance" "bastion_instance" {
   root_block_device {
     volume_size = 20
     encrypted   = true
-    kms_key_id   = var.ebs_kms_key_id
+    kms_key_id   = var.ebs_kms_key_arn
   }
 }
 

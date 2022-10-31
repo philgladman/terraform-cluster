@@ -32,8 +32,8 @@ dependency "bastion" {
 inputs = {
   resource_name              = "phil-${local.common.locals.env_name}"
   source_ami                 = "${local.rke2.locals.source_ami}"
-  instance_type              = "${local.rke2.locals.instance_type}"
-  rke2_subnet_id             = dependency.vpc.outputs.rke2_subnet_id
+  controlplane_instance_type = "${local.rke2.locals.controlplane_instance_type}"
+  rke2_subnet_ids            = dependency.vpc.outputs.rke2_subnet_ids
   master_ssh_key_name        = dependency.master-pem.outputs.master_ssh_key_name
   vpc_id                     = dependency.vpc.outputs.vpc_id
   ebs_kms_key_id             = dependency.sops.outputs.ebs_kms_key_id

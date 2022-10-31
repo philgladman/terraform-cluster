@@ -51,3 +51,8 @@ variable "instance_type" {
   type        = string
   default     = ""
 }
+
+variable "master_key_ssm_name" {
+  type        = string
+  default     = ""
+}

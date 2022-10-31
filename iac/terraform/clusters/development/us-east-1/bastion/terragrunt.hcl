@@ -30,6 +30,7 @@ inputs = {
   instance_type              = "t3.micro"
   bastion_subnet_id          = dependency.vpc.outputs.bastion_subnet_id
   master_ssh_key_name        = dependency.master-pem.outputs.master_ssh_key_name
+  master_key_ssm_name        = dependency.master-pem.outputs.master_key_ssm_name
   vpc_id                     = dependency.vpc.outputs.vpc_id
   ebs_kms_key_id             = dependency.sops.outputs.ebs_kms_key_id
   ebs_kms_key_arn            = dependency.sops.outputs.ebs_kms_key_arn

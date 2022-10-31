@@ -7,9 +7,8 @@ variable "tags" {
   type = map(string)
 }
 
-variable "rke2_subnet_id" {
-  type = string
-  default = ""
+variable "rke2_subnet_ids" {
+  type = list(string)
 }
 
 variable "master_ssh_key_name" {
@@ -47,7 +46,7 @@ variable "source_ami" {
   default     = ""
 }
 
-variable "instance_type" {
+variable "controlplane_instance_type" {
   type        = string
   default     = ""
 }
