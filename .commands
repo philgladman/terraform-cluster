@@ -1,0 +1,9 @@
+export PATH=$PATH:/var/lib/rancher/rke2/bin && mkdir -p /home/ec2-user/.kube && sudo cp /etc/rancher/rke2/rke2.yaml .kube/config && sudo chown ec2-user:ec2-user .kube/config
+
+aws s3 cp s3://phil-dev-cluster-nuh09fjqkg/rke2.yaml ~/.kube/config && chmod 600 ~/.kube/config
+
+aws kms create-grant --key-id arn:aws:kms:us-east-1:567243246807:key/14830a0c-82b8-4883-8ea3-8a545321eb87 --grantee-principal arn:aws:iam::567243246807:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling --operations "Encrypt" "Decrypt" "ReEncryptFrom" "ReEncryptTo" "GenerateDataKey" "GenerateDataKeyWithoutPlaintext" "DescribeKey" "CreateGrant" --profile phil-bah-role
+
+echo -e $(aws ssm get-parameter --name $${KEY_SSM_NAME}  --with-decryption | jq '.[].Value' | cut -d '"' -f 2) > ~/.ssh/master-key && && chown ec2-user:ec2-user ~/.ssh/master-key && chmod 600 ~/.ssh/master-key 
+
+echo -e $(aws ssm get-parameter --name phil-dev-master-key-private --with-decryption | jq '.[].Value' | cut -d '"' -f 2) > ~/.ssh/master-key && chown ec2-user:ec2-user ~/.ssh/master-key && chmod 600 ~/.ssh/master-key 
