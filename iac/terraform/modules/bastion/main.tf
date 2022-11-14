@@ -81,11 +81,6 @@ resource "aws_iam_role_policy_attachment" "ssm-attachment" {
     policy_arn = aws_iam_policy.bastion-ssm-access-policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "cloudwatch-attachment" {
-    role       = aws_iam_role.bastion-role.name
-    policy_arn = aws_iam_policy.bastion-cloudwatch-agent-access-policy.arn
-}
-
 resource "aws_iam_policy" "bastion-s3-access-policy" {
   name        = "${local.uname}-bastion-s3-access-policy"
   path        = "/"
@@ -105,13 +100,6 @@ resource "aws_iam_policy" "bastion-ssm-access-policy" {
   path        = "/"
   description = "SSM policy"
   policy      = data.aws_iam_policy_document.ssm_access_policy_doc.json
-} 
-
-resource "aws_iam_policy" "bastion-cloudwatch-agent-access-policy" {
-  name        = "${local.uname}-bastion-cloudwatch-agent-policy"
-  path        = "/"
-  description = "Cloudwatch Agent policy"
-  policy      = data.aws_iam_policy_document.cloudwatch_agent_policy_doc.json
 } 
 
 resource "aws_iam_role" "bastion-role" {

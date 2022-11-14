@@ -52,10 +52,6 @@ data "aws_iam_policy_document" "ssm_access_policy_doc" {
       "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.master_key_ssm_name}"
     ]
   }
-}
-
-data "aws_iam_policy_document" "cloudwatch_agent_policy_doc" {
-  version = "2012-10-17"
   statement {
     effect  = "Allow"
     actions = [
