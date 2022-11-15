@@ -78,7 +78,7 @@ resource "aws_iam_role_policy_attachment" "kms-attachment" {
 
 resource "aws_iam_role_policy_attachment" "ssm-attachment" {
     role       = aws_iam_role.bastion-role.name
-    policy_arn = aws_iam_policy.bastion-ssm-access-policy.arn
+    policy_arn = aws_iam_policy.bastion-cloudwatch-agent-access-policy.arn
 }
 
 resource "aws_iam_policy" "bastion-s3-access-policy" {
@@ -95,11 +95,11 @@ resource "aws_iam_policy" "bastion-kms-access-policy" {
   policy      = data.aws_iam_policy_document.kms_access_policy_doc.json
 } 
 
-resource "aws_iam_policy" "bastion-ssm-access-policy" {
-  name        = "${local.uname}-bastion-ssm-access-policy"
+resource "aws_iam_policy" "bastion-cloudwatch-agent-access-policy" {
+  name        = "${local.uname}-bastion-cloudwatch-agent-access-policy"
   path        = "/"
   description = "SSM policy"
-  policy      = data.aws_iam_policy_document.ssm_access_policy_doc.json
+  policy      = data.aws_iam_policy_document.cloudwatch_agent_access_policy_doc.json
 } 
 
 resource "aws_iam_role" "bastion-role" {
