@@ -1,23 +1,18 @@
-#!/usr/bin/env bash
-
-# enable the epel release
-#echo "updating server"
-#yum update -y 
-
-# Install Cloudwatch agent
+# Download Cloudwatch agent
 echo "Installing cloudwatch Agent"
 sudo yum install -y wget
 wget https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
 rpm -U ./amazon-cloudwatch-agent.rpm
 
 # Create cloudwatch config file
-cat >"/tmp/cw-config.json"<<'EOF'
+echo "creating cloudwatch agent config file"
+cat >"/home/ec2-user/cw-config.json"<<'EOF'
 {
   "agent": {
     "metrics_collection_interval": 10
   },
   "metrics": {
-    "namespace": "CloudWatch-Agent-TEST-Metrics",
+    "namespace": "METRICS_NAMESPACE_PLACEHOLDER",
     "metrics_collected": {
       "cpu": {
         "resources": ["*"],
@@ -41,21 +36,14 @@ cat >"/tmp/cw-config.json"<<'EOF'
         "collect_list": [
           {
             "file_path": "/var/log/messages",
-            "log_group_name": "ec2-/var/log/messages",
+            "log_group_name": "LOG_GROUP_NAME_PLACEHOLDER",
             "timestamp_format": "%H: %M: %S%y%b%-d"
           }
         ]
       }
     },
-    "log_stream_name": "{instance_id}"
+    "log_stream_name": "INSTANCE_NAME_PLACEHOLDER/{instance_id}"
   }
 }
 EOF
 
-# Use cloudwatch config from SSM
-/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
--a fetch-config \
--m ec2 \
--c file:/tmp/cw-config.json -s
-
-echo 'cloudwatch Agent Installation Complete'

@@ -37,11 +37,6 @@ variable "region" {
   default     = ""
 }
 
-variable "cloudwatch_agent_ssm_name" {
-  type        = string
-  default     = ""
-}
-
 variable "bastion_ami" {
   type        = string
   default     = ""
@@ -53,6 +48,16 @@ variable "instance_type" {
 }
 
 variable "master_key_ssm_name" {
+  type        = string
+  default     = ""
+}
+
+variable "log_group_name" {
+  type        = string
+  default     = ""
+}
+
+variable "metrics_namespace" {
   type        = string
   default     = ""
 }

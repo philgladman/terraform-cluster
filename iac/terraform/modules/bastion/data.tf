@@ -6,8 +6,9 @@ data "cloudinit_config" "this" {
     filename     = "00_userdata.sh"
     content_type = "text/x-shellscript"
     content = templatefile("${path.module}/files/userdata.sh", {
-      SSM_CLOUDWATCH_CONFIG = var.cloudwatch_agent_ssm_name
       MASTER_KEY_SSM_NAME   = var.master_key_ssm_name
+      LOG_GROUP_NAME        = var.log_group_name 
+      METRICS_NAMESPACE     = var.metrics_namespace
     })
   }
 }
@@ -42,15 +43,12 @@ data "aws_iam_policy_document" "s3_access_policy_doc" {
   }
 }
 
-data "aws_iam_policy_document" "cloudwatch_agent_access_policy_doc" {
+data "aws_iam_policy_document" "ssm_access_policy_doc" {
   version = "2012-10-17"
   statement {
     effect  = "Allow"
     actions = ["ssm:GetParameter"]
-    resources = [
-      "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.cloudwatch_agent_ssm_name}",
-      "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.master_key_ssm_name}"
-    ]
+    resources = ["arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.master_key_ssm_name}"]
   }
   statement {
     effect  = "Allow"

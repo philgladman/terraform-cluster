@@ -1,5 +1,5 @@
 source "amazon-ebs" "rhel" {
-  ami_name             = "packer-rhel-8-with-cw-agent-2"
+  ami_name             = "packer-rhel-8-with-cw-agent"
   instance_type        = "t2.micro"
   region               = "us-east-1"
   source_ami           = "ami-06640050dc3f556bb"
@@ -9,7 +9,7 @@ source "amazon-ebs" "rhel" {
   subnet_id            = "subnet-01e29fb03f87784eb"
   ssh_username         = "ec2-user"
   tags = {
-    Name           = "packer-rhel-8-with-cw-agent-2"
+    Name           = "packer-rhel-8-with-cw-agent"
   }
 }
 

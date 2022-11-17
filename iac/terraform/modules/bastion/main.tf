@@ -25,19 +25,6 @@ resource "aws_security_group" "bastion_sg" {
   tags = var.tags
 }
 
-#
-# SSM Paramater for cloudwatch agent
-#
-
-resource "aws_ssm_parameter" "cloudwatch_agent" {
-  description = "Cloudwatch agent config to configure custom log"
-  name        = var.cloudwatch_agent_ssm_name
-  type        = "SecureString"
-  value       = templatefile("${path.module}/files/cloudwatch_agent_config.json", {
-      uname = local.uname
-    })
-}
-
 resource "aws_eip" "bastion_eip" {
   instance = aws_instance.bastion_instance.id
   vpc      = true
@@ -78,7 +65,7 @@ resource "aws_iam_role_policy_attachment" "kms-attachment" {
 
 resource "aws_iam_role_policy_attachment" "ssm-attachment" {
     role       = aws_iam_role.bastion-role.name
-    policy_arn = aws_iam_policy.bastion-cloudwatch-agent-access-policy.arn
+    policy_arn = aws_iam_policy.bastion-ssm-access-policy.arn
 }
 
 resource "aws_iam_policy" "bastion-s3-access-policy" {
@@ -95,11 +82,11 @@ resource "aws_iam_policy" "bastion-kms-access-policy" {
   policy      = data.aws_iam_policy_document.kms_access_policy_doc.json
 } 
 
-resource "aws_iam_policy" "bastion-cloudwatch-agent-access-policy" {
-  name        = "${local.uname}-bastion-cloudwatch-agent-access-policy"
+resource "aws_iam_policy" "bastion-ssm-access-policy" {
+  name        = "${local.uname}-bastion-ssm-access-policy"
   path        = "/"
   description = "SSM policy"
-  policy      = data.aws_iam_policy_document.cloudwatch_agent_access_policy_doc.json
+  policy      = data.aws_iam_policy_document.ssm_access_policy_doc.json
 } 
 
 resource "aws_iam_role" "bastion-role" {

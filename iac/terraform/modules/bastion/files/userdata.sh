@@ -12,26 +12,29 @@ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip
 unzip awscliv2.zip
 sudo ./aws/install
 
-# Download Cloudwatch agent
-echo "Installing cloudwatch Agent"
-sudo yum install -y wget
-wget https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
-rpm -U ./amazon-cloudwatch-agent.rpm
+# # Download Cloudwatch agent
+# echo "Installing cloudwatch Agent"
+# sudo yum install -y wget
+# wget https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+# rpm -U ./amazon-cloudwatch-agent.rpm
 
 # Get name of this instance
 echo "fetching instance name"
 export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 export INSTANCE_NAME=$(aws ec2 describe-instances --instance-ids $${INSTANCE_ID} --query "Reservations[].Instances[].Tags[?Key=='Name'].Value" --output text)
 
-# Get cloudwatch agent config file
+# Edit values in cloudwatch agent config file
 echo "fetching cloudwatch agent config file from ssm"
-aws ssm get-parameter --name ${SSM_CLOUDWATCH_CONFIG} --with-decryption --query "Parameter.Value" --output text  | sed "s/INSTANCE_NAME_PLACEHOLDER/$${INSTANCE_NAME}/g" | sed "s/LOG_GROUP_NAME/\/aws\/ec2\/instances/g"  > /tmp/cw-config.json
+# sed -i '' "s/INSTANCE_NAME_PLACEHOLDER/$${INSTANCE_NAME}/g; s/LOG_GROUP_NAME_PLACEHOLDER/${LOG_GROUP_NAME}/g; s/METRICS_NAMESPACE_PLACEHOLDER/${METRICS_NAMESPACE}/g" /home/ec2-user/cw-config.json
+sed -i "s|INSTANCE_NAME_PLACEHOLDER|$${INSTANCE_NAME}|g; s|LOG_GROUP_NAME_PLACEHOLDER|${LOG_GROUP_NAME}|g; s|METRICS_NAMESPACE_PLACEHOLDER|${METRICS_NAMESPACE}|g" /home/ec2-user/cw-config.json 
+# # Get cloudwatch agent config file
+# echo "fetching cloudwatch agent config file from ssm"
 
 # Install and Configure Cloudwatch agent from ssm parameter store config file
 /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
 -a fetch-config \
 -m ec2 \
--c file:/tmp/cw-config.json -s
+-c file:/home/ec2-user/cw-config.json -s
 echo 'cloudwatch Agent Installation Complete'
 
 # Download kubectl and mnake kube dir
