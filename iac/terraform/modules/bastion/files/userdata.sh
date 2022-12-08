@@ -12,30 +12,72 @@ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip
 unzip awscliv2.zip
 sudo ./aws/install
 
-# # Download Cloudwatch agent
-# echo "Installing cloudwatch Agent"
-# sudo yum install -y wget
-# wget https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
-# rpm -U ./amazon-cloudwatch-agent.rpm
+install_cloudwatch_ssm_agent(){
+  echo "Installing cloudwatch Agent"
+  sudo yum install -y wget
+  wget https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+  rpm -U ./amazon-cloudwatch-agent.rpm
 
-# Get name of this instance
-echo "fetching instance name"
-export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
-export INSTANCE_NAME=$(aws ec2 describe-instances --instance-ids $${INSTANCE_ID} --query "Reservations[].Instances[].Tags[?Key=='Name'].Value" --output text)
+  # Get name of this instance
+  echo "fetching instance name"
+  export INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+  export INSTANCE_NAME=$(aws ec2 describe-instances --instance-ids $${INSTANCE_ID} --query "Reservations[].Instances[].Tags[?Key=='Name'].Value" --output text)
 
-# Edit values in cloudwatch agent config file
-echo "fetching cloudwatch agent config file from ssm"
-# sed -i '' "s/INSTANCE_NAME_PLACEHOLDER/$${INSTANCE_NAME}/g; s/LOG_GROUP_NAME_PLACEHOLDER/${LOG_GROUP_NAME}/g; s/METRICS_NAMESPACE_PLACEHOLDER/${METRICS_NAMESPACE}/g" /home/ec2-user/cw-config.json
-sed -i "s|INSTANCE_NAME_PLACEHOLDER|$${INSTANCE_NAME}|g; s|LOG_GROUP_NAME_PLACEHOLDER|${LOG_GROUP_NAME}|g; s|METRICS_NAMESPACE_PLACEHOLDER|${METRICS_NAMESPACE}|g" /home/ec2-user/cw-config.json 
-# # Get cloudwatch agent config file
-# echo "fetching cloudwatch agent config file from ssm"
+  # Create cloudwatch config file
+  echo "creating cloudwatch agent config file"
+  cat >"/home/ec2-user/cw-config.json"<<EOF
+  {
+    "agent": {
+      "metrics_collection_interval": 10
+    },
+    "metrics": {
+      "namespace": "${METRICS_NAMESPACE}",
+      "metrics_collected": {
+        "cpu": {
+          "resources": ["*"],
+          "totalcpu": true,
+          "measurement": ["cpu_usage_idle"]
+        },
+        "disk": {
+          "resources": ["/", "/tmp"],
+          "measurement": ["disk_used_percent"],
+          "ignore_file_system_types": ["sysfs", "devtmpfs"]
+        },
+        "mem": {
+          "measurement": ["mem_available_percent"]
+        }
+      },
+      "aggregation_dimensions": [["InstanceId", "InstanceType"], ["InstanceId"]]
+    },
+    "logs": {
+      "logs_collected": {
+        "files": {
+          "collect_list": [
+            {
+              "file_path": "/var/log/messages",
+              "log_group_name": "${LOG_GROUP_NAME}",
+              "timestamp_format": "%H: %M: %S%y%b%-d"
+            }
+          ]
+        }
+      },
+      "log_stream_name": "$${INSTANCE_NAME}/{instance_id}"
+    }
+  }
+EOF
 
-# Install and Configure Cloudwatch agent from ssm parameter store config file
-/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
--a fetch-config \
--m ec2 \
--c file:/home/ec2-user/cw-config.json -s
-echo 'cloudwatch Agent Installation Complete'
+  # # Edit values in cloudwatch agent config file
+  # echo "editing cloudwatch agent config file"
+  # sed -i "s|INSTANCE_NAME_PLACEHOLDER|$${INSTANCE_NAME}|g; s|LOG_GROUP_NAME_PLACEHOLDER|${LOG_GROUP_NAME}|g; s|METRICS_NAMESPACE_PLACEHOLDER|${METRICS_NAMESPACE}|g" /home/ec2-user/cw-config.json 
+
+  # Install and Configure Cloudwatch agent from ssm parameter store config file
+  /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config \
+  -m ec2 \
+  -c file:/home/ec2-user/cw-config.json -s
+  echo 'cloudwatch Agent Installation Complete'
+}
+install_cloudwatch_ssm_agent
 
 # Download kubectl and mnake kube dir
 curl -LO curl -LO "https://dl.k8s.io/release/v1.23.5/bin/linux/amd64/kubectl"

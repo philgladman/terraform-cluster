@@ -27,7 +27,7 @@ dependency "sops" {
 
 inputs = {
   resource_name              = "phil-${local.common.locals.env_name}"
-  bastion_ami                = "ami-0b76a62a9b48ce746"
+  bastion_ami                = "ami-06640050dc3f556bb"
   /* bastion_ami                = "ami-06640050dc3f556bb" */
   instance_type              = "t3.micro"
   bastion_subnet_id          = dependency.vpc.outputs.bastion_subnet_id
@@ -38,7 +38,7 @@ inputs = {
   ebs_kms_key_arn            = dependency.sops.outputs.ebs_kms_key_arn
   region                     = local.region.locals.region
   metrics_namespace          = "CloudWatch-Agent-Metrics"
-  log_group_name             = "/aws/eks/${local.name}/cluster"
+  log_group_name             = "/aws/ec2/${local.name}/bastion"
 
   tags = {
     Environment  = "${local.common.locals.env_name}"
