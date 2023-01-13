@@ -34,7 +34,7 @@ inputs = {
   topic_name     = local.alerts.locals.topic_name
   emails         = local.alerts.locals.emails
   sns_kms_key_id = local.alerts.locals.sns_kms_key_id
-  tail_name      = local.alerts.locals.tail_name
+  trail_name      = local.alerts.locals.trail_name
 
   tags = {
     Environment  = "${local.common.locals.env_name}"

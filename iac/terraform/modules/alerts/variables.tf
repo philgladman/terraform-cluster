@@ -27,7 +27,7 @@ variable "sns_kms_key_id" {
   default     = ""
 }
 
-variable "tail_name" {
+variable "trail_name" {
   description = "Cloudtrail trail name"
   type        = string
   default     = ""

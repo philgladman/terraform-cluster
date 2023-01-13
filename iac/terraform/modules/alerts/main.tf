@@ -71,7 +71,7 @@ resource "aws_s3_bucket_policy" "cloudtrail_s3_bucket_policy" {
             "Resource": "${aws_s3_bucket.cloudtrail_s3_bucket.arn}",
             "Condition": {
                 "StringEquals": {
-                    "AWS:SourceArn": "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${local.uname}-${var.tail_name}"
+                    "AWS:SourceArn": "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${local.uname}-${var.trail_name}"
                 }
             }
         },
@@ -85,7 +85,7 @@ resource "aws_s3_bucket_policy" "cloudtrail_s3_bucket_policy" {
             "Resource": "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
             "Condition": {
                 "StringEquals": {
-                    "AWS:SourceArn": "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${local.uname}-${var.tail_name}",
+                    "AWS:SourceArn": "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${local.uname}-${var.trail_name}",
                     "s3:x-amz-acl": "bucket-owner-full-control"
                 }
             }
@@ -211,23 +211,23 @@ resource "aws_cloudtrail" "alerts_trail" {
 ###
 
 resource "aws_cloudwatch_log_metric_filter" "console_signon_failure_metric_filter" {
-  name           = "${local.uname}-CloudTrailConsoleSignInFailures"
+  name           = "${local.uname}-console-signon-failure"
   pattern        = "{ ($.eventName = ConsoleLogin) && ($.errorMessage = \"Failed authentication\") }"
   log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
 
   metric_transformation {
-    name      = "${local.uname}-ConsoleSignInFailureCount"
-    namespace = "${local.uname}-CloudTrailMetrics"
+    name      = "${local.uname}-console-signon-failure-counter"
+    namespace = "${local.uname}-cloudtrail-metrics"
     value     = "1"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "console_signon_failure_alarm" {
-  alarm_name          = "${local.uname}-CloudTrailConsoleSignInFailures"
+  alarm_name          = "${local.uname}-console-signon-failure"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "${local.uname}-ConsoleSignInFailureCount"
-  namespace           = "${local.uname}-CloudTrailMetrics"
+  metric_name         = "${local.uname}-console-signon-failure-counter"
+  namespace           = "${local.uname}-cloudtrail-metrics"
   period              = "60"
   statistic           = "Sum"
   threshold           = "1"
@@ -237,23 +237,23 @@ resource "aws_cloudwatch_metric_alarm" "console_signon_failure_alarm" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "security_group_changes_metric_filter" {
-  name           = "${local.uname}-CloudTrailSecurityGroupChanges"
+  name           = "${local.uname}-security-group-changes"
   pattern        = "{ ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup) }"
   log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
 
   metric_transformation {
-    name      = "${local.uname}-SecurityGroupEventCount"
-    namespace = "${local.uname}-CloudTrailMetrics"
+    name      = "${local.uname}-security-group-changes-counter"
+    namespace = "${local.uname}-cloudtrail-metrics"
     value     = "1"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "security_group_changes_alarm" {
-  alarm_name          = "${local.uname}-CloudTrailSecurityGroupChanges"
+  alarm_name          = "${local.uname}-security-group-changes"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "${local.uname}-SecurityGroupEventCount"
-  namespace           = "${local.uname}-CloudTrailMetrics"
+  metric_name         = "${local.uname}-security-group-changes-counter"
+  namespace           = "${local.uname}-cloudtrail-metrics"
   period              = "60"
   statistic           = "Sum"
   threshold           = "1"
@@ -263,23 +263,23 @@ resource "aws_cloudwatch_metric_alarm" "security_group_changes_alarm" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "network_acl_changes_metric_filter" {
-  name           = "${local.uname}-CloudTrailNetworkAclChanges"
+  name           = "${local.uname}-network-acl-changes"
   pattern        = "{ ($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation) }"
   log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
 
   metric_transformation {
-    name      = "${local.uname}-NetworkAclEventCount"
-    namespace = "${local.uname}-CloudTrailMetrics"
+    name      = "${local.uname}-network-acl-changes-counter"
+    namespace = "${local.uname}-cloudtrail-metrics"
     value     = "1"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "network_acl_changes_alarm" {
-  alarm_name          = "${local.uname}-CloudTrailNetworkAclChanges"
+  alarm_name          = "${local.uname}-network-acl-changes"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "${local.uname}-NetworkAclEventCount"
-  namespace           = "${local.uname}-CloudTrailMetrics"
+  metric_name         = "${local.uname}-network-acl-changes-counter"
+  namespace           = "${local.uname}-cloudtrail-metrics"
   period              = "60"
   statistic           = "Sum"
   threshold           = "1"
@@ -289,23 +289,23 @@ resource "aws_cloudwatch_metric_alarm" "network_acl_changes_alarm" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "gateway_changes_metric_filter" {
-  name           = "${local.uname}-CloudTrailGatewayChanges"
+  name           = "${local.uname}-gateway-changes"
   pattern        = "{ ($.eventName = CreateCustomerGateway) || ($.eventName = DeleteCustomerGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = CreateInternetGateway) || ($.eventName = DeleteInternetGateway) || ($.eventName = DetachInternetGateway) }"
   log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
 
   metric_transformation {
-    name      = "${local.uname}-GatewayEventCount"
-    namespace = "${local.uname}-CloudTrailMetrics"
+    name      = "${local.uname}-gateway-changes-counter"
+    namespace = "${local.uname}-cloudtrail-metrics"
     value     = "1"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "gateway_changes_alarm" {
-  alarm_name          = "${local.uname}-CloudTrailGatewayChanges"
+  alarm_name          = "${local.uname}-gateway-changes"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "${local.uname}-GatewayEventCount"
-  namespace           = "${local.uname}-CloudTrailMetrics"
+  metric_name         = "${local.uname}-gateway-changes-counter"
+  namespace           = "${local.uname}-cloudtrail-metrics"
   period              = "60"
   statistic           = "Sum"
   threshold           = "1"
@@ -315,23 +315,23 @@ resource "aws_cloudwatch_metric_alarm" "gateway_changes_alarm" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "vpc_changes_metric_filter" {
-  name           = "${local.uname}-CloudTrailVpcChanges"
+  name           = "${local.uname}-vpc-changes"
   pattern        = "{ ($.eventName = CreateVpc) || ($.eventName = DeleteVpc) || ($.eventName = ModifyVpcAttribute) || ($.eventName = AcceptVpcPeeringConnection) || ($.eventName = CreateVpcPeeringConnection) || ($.eventName = DeleteVpcPeeringConnection) || ($.eventName = RejectVpcPeeringConnection) || ($.eventName = AttachClassicLinkVpc) || ($.eventName = DetachClassicLinkVpc) || ($.eventName = DisableVpcClassicLink) || ($.eventName = EnableVpcClassicLink) }"
   log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
 
   metric_transformation {
-    name      = "${local.uname}-VpcEventCount"
-    namespace = "${local.uname}-CloudTrailMetrics"
+    name      = "${local.uname}-vpc-changes-counter"
+    namespace = "${local.uname}-cloudtrail-metrics"
     value     = "1"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "vpc_changes_alarm" {
-  alarm_name          = "${local.uname}-CloudTrailVpcChanges"
+  alarm_name          = "${local.uname}-vpc-changes"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "${local.uname}-VpcEventCount"
-  namespace           = "${local.uname}-CloudTrailMetrics"
+  metric_name         = "${local.uname}-vpc-changes-counter"
+  namespace           = "${local.uname}-cloudtrail-metrics"
   period              = "60"
   statistic           = "Sum"
   threshold           = "1"
@@ -341,23 +341,23 @@ resource "aws_cloudwatch_metric_alarm" "vpc_changes_alarm" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "ec2_instance_changes_metric_filter" {
-  name           = "${local.uname}-CloudTrailEC2InstanceChanges"
+  name           = "${local.uname}-ec2-instance-changes"
   pattern        = "{ ($.eventName = RunInstances) || ($.eventName = RebootInstances) || ($.eventName = StartInstances) || ($.eventName = StopInstances) || ($.eventName = TerminateInstances) }"
   log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
 
   metric_transformation {
-    name      = "${local.uname}-EC2InstanceEventCount"
-    namespace = "${local.uname}-CloudTrailMetrics"
+    name      = "${local.uname}-ec2-instance-changes-counter"
+    namespace = "${local.uname}-cloudtrail-metrics"
     value     = "1"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "ec2_instance_changes_alarm" {
-  alarm_name          = "${local.uname}-CloudTrailEC2InstanceChanges"
+  alarm_name          = "${local.uname}-ec2-instance-changes"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "${local.uname}-EC2InstanceEventCount"
-  namespace           = "${local.uname}-CloudTrailMetrics"
+  metric_name         = "${local.uname}-ec2-instance-changes-counter"
+  namespace           = "${local.uname}-cloudtrail-metrics"
   period              = "60"
   statistic           = "Sum"
   threshold           = "1"
@@ -367,23 +367,23 @@ resource "aws_cloudwatch_metric_alarm" "ec2_instance_changes_alarm" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "ec2_large_instance_changes_metric_filter" {
-  name           = "${local.uname}-CloudTrailEC2LargeInstanceChanges"
+  name           = "${local.uname}-ec2-large-instance-changes"
   pattern        = "{ ($.eventName = RunInstances) && (($.requestParameters.instanceType = *.8xlarge) || ($.requestParameters.instanceType = *.4xlarge)) }"
   log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
 
   metric_transformation {
-    name      = "${local.uname}-EC2LargeInstanceEventCount"
-    namespace = "${local.uname}-CloudTrailMetrics"
+    name      = "${local.uname}-ec2-large-instance-changes-counter"
+    namespace = "${local.uname}-cloudtrail-metrics"
     value     = "1"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "ec2_large_instance_changes_alarm" {
-  alarm_name          = "${local.uname}-CloudTrailEC2LargeInstanceChanges"
+  alarm_name          = "${local.uname}-ec2-large-instance-changes"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "${local.uname}-EC2LargeInstanceEventCount"
-  namespace           = "${local.uname}-CloudTrailMetrics"
+  metric_name         = "${local.uname}-ec2-large-instance-changes-counter"
+  namespace           = "${local.uname}-cloudtrail-metrics"
   period              = "60"
   statistic           = "Sum"
   threshold           = "1"
@@ -393,23 +393,23 @@ resource "aws_cloudwatch_metric_alarm" "ec2_large_instance_changes_alarm" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "cloudtrail_changes_metric_filter" {
-  name           = "${local.uname}-CloudTrailChanges"
+  name           = "${local.uname}-cloudtrail-changes"
   pattern        = "{ ($.eventName = CreateTrail) || ($.eventName = UpdateTrail) || ($.eventName = DeleteTrail) || ($.eventName = StartLogging) || ($.eventName = StopLogging) }"
   log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
 
   metric_transformation {
-    name      = "${local.uname}-CloudTrailEventCount"
-    namespace = "${local.uname}-CloudTrailMetrics"
+    name      = "${local.uname}-cloudtrail-changes-counter"
+    namespace = "${local.uname}-cloudtrail-metrics"
     value     = "1"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "cloudtrail_changes_alarm" {
-  alarm_name          = "${local.uname}-CloudTrailChanges"
+  alarm_name          = "${local.uname}-cloudtrail-changes"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "${local.uname}-CloudTrailEventCount"
-  namespace           = "${local.uname}-CloudTrailMetrics"
+  metric_name         = "${local.uname}-cloudtrail-changes-counter"
+  namespace           = "${local.uname}-cloudtrail-metrics"
   period              = "60"
   statistic           = "Sum"
   threshold           = "1"
@@ -419,23 +419,23 @@ resource "aws_cloudwatch_metric_alarm" "cloudtrail_changes_alarm" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "auth_failure_metric_filter" {
-  name           = "${local.uname}-CloudTrailAuthorizationFailures"
+  name           = "${local.uname}-auth-failure"
   pattern        = "{ ($.errorCode = \"*UnauthorizedOperation\") || ($.errorCode = \"AccessDenied*\") }"
   log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
 
   metric_transformation {
-    name      = "${local.uname}-AuthorizationFailureCount"
-    namespace = "${local.uname}-CloudTrailMetrics"
+    name      = "${local.uname}-auth-failure-counter"
+    namespace = "${local.uname}-cloudtrail-metrics"
     value     = "1"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "auth_failure_alarm" {
-  alarm_name          = "${local.uname}-CloudTrailAuthorizationFailures"
+  alarm_name          = "${local.uname}-auth-failure"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "${local.uname}-AuthorizationFailureCount"
-  namespace           = "${local.uname}-CloudTrailMetrics"
+  metric_name         = "${local.uname}-auth-failure-counter"
+  namespace           = "${local.uname}-cloudtrail-metrics"
   period              = "60"
   statistic           = "Sum"
   threshold           = "1"
@@ -445,23 +445,23 @@ resource "aws_cloudwatch_metric_alarm" "auth_failure_alarm" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "iam_policy_changes_metric_filter" {
-  name           = "${local.uname}-CloudTrailIAMPolicyChanges"
+  name           = "${local.uname}-iam-policy-changes"
   pattern        = "{ ($.eventName = DeleteGroupPolicy) || ($.eventName = DeleteRolePolicy) || ($.eventName = DeleteUserPolicy) || ($.eventName = PutGroupPolicy) || ($.eventName = PutRolePolicy) || ($.eventName = PutUserPolicy) || ($.eventName = CreatePolicy) || ($.eventName = DeletePolicy) || ($.eventName = CreatePolicyVersion) || ($.eventName = DeletePolicyVersion) || ($.eventName = AttachRolePolicy) || ($.eventName = DetachRolePolicy) || ($.eventName = AttachUserPolicy) || ($.eventName = DetachUserPolicy) || ($.eventName=AttachGroupPolicy) || ($.eventName = DetachGroupPolicy) }"
   log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
 
   metric_transformation {
-    name      = "${local.uname}-IAMPolicyEventCount"
-    namespace = "${local.uname}-CloudTrailMetrics"
+    name      = "${local.uname}-iam-policy-changes-counter"
+    namespace = "${local.uname}-cloudtrail-metrics"
     value     = "1"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "iam_policy_changes_alarm" {
-  alarm_name          = "${local.uname}-CloudTrailIAMPolicyChanges"
+  alarm_name          = "${local.uname}-iam-policy-changes"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "${local.uname}-IAMPolicyEventCount"
-  namespace           = "${local.uname}-CloudTrailMetrics"
+  metric_name         = "${local.uname}-iam-policy-changes-counter"
+  namespace           = "${local.uname}-cloudtrail-metrics"
   period              = "60"
   statistic           = "Sum"
   threshold           = "1"
@@ -471,23 +471,23 @@ resource "aws_cloudwatch_metric_alarm" "iam_policy_changes_alarm" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "cmk_changes_metric_filter" {
-  name           = "${local.uname}-CmkDisAndDel"
-  pattern        = "{ ($.eventSource = kms.amazonaws.com)&&($.eventName = DisableKey)||($.eventName = ScheduleKeyDeletion) }"
+  name           = "${local.uname}-cmk-changes"
+  pattern        = "{ ($.eventSource = kms.amazonaws.com)&&($.eventName = DisableKey)||($.eventName = ScheduleKeyDeletion)||($.eventName = PutKeyPolicy) }"
   log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
 
   metric_transformation {
-    name      = "${local.uname}-cmkdisanddeleventcount"
-    namespace = "${local.uname}-CloudTrailMetrics"
+    name      = "${local.uname}-cmk-changes-counter"
+    namespace = "${local.uname}-cloudtrail-metrics"
     value     = "1"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "cmk_changes_alarm" {
-  alarm_name          = "${local.uname}-CmkDisAndDel"
+  alarm_name          = "${local.uname}-cmk-changes"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "${local.uname}-cmkdisanddeleventcount"
-  namespace           = "${local.uname}-CloudTrailMetrics"
+  metric_name         = "${local.uname}-cmk-changes-counter"
+  namespace           = "${local.uname}-cloudtrail-metrics"
   period              = "60"
   statistic           = "Sum"
   threshold           = "1"
@@ -497,27 +497,42 @@ resource "aws_cloudwatch_metric_alarm" "cmk_changes_alarm" {
 }
 
 resource "aws_cloudwatch_log_metric_filter" "user_group_changes_metric_filter" {
-  name           = "${local.uname}-CloudTrailIAMUserGroupChanges"
-  pattern        = "{ ($.eventSource = kms.amazonaws.com)&&($.eventName = DisableKey)||($.eventName = ScheduleKeyDeletion) }"
+  name           = "${local.uname}-user-group-changes"
+  pattern        = "{ ($.eventName=AddUserToGroup)||($.eventName=AttachUserPolicy)||($.eventName=ChangePassword)||($.eventName=CreateAccessKey)||($.eventName=CreateGroup)||($.eventName=CreateLoginProfile)||($.eventName=CreateRole)||($.eventName=alerts)||($.eventName=DeactivateMFADevice)||($.eventName=DeleteAccessKey)||($.eventName=DeleteAccountPasswordPolicy)||($.eventName=DeleteGroup)||($.eventName=DeleteGroupPolicy)||($.eventName=DeleteLoginProfile)||($.eventName=DeleteUser)||($.eventName=DeleteUserPolicy)||($.eventName=DeleteUserPermissionsBoundary)||($.eventName=DeleteVirtualMFADevice)||($.eventName=DetachGroupPolicy)||($.eventName=DetachRolePolicy)||($.eventName=DetachUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutUserPolicy)||($.eventName=PutUserPermissionsBoundary)||($.eventName=RemoveUserFromGroup)||($.eventName=UntagUser)||($.eventName=UpdateAccessKey)||($.eventName=UpdateAccountPasswordPolicy)||($.eventName=UpdateGroup)||($.eventName=UpdateLoginProfile)||($.eventName=UpdateServiceSpecificCredential) }"
   log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
 
   metric_transformation {
-    name      = "${local.uname}-CloudTrailIAMUserGroupCounter"
-    namespace = "${local.uname}-CloudTrailMetrics"
+    name      = "${local.uname}-user-group-changes-counter"
+    namespace = "${local.uname}-cloudtrail-metrics"
     value     = "1"
   }
 }
 
 resource "aws_cloudwatch_metric_alarm" "user_group_changes_alarm" {
-  alarm_name          = "${local.uname}-CloudTrailIAMUserGroupChanges"
+  alarm_name          = "${local.uname}-user-group-changes"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = "1"
-  metric_name         = "${local.uname}-CloudTrailIAMUserGroupCounter"
-  namespace           = "${local.uname}-CloudTrailMetrics"
+  metric_name         = "${local.uname}-user-group-changes-counter"
+  namespace           = "${local.uname}-cloudtrail-metrics"
   period              = "60"
   statistic           = "Sum"
   threshold           = "1"
-  alarm_description   = "Alarms when an API call is made to schedule the deletion of a CMK, or a CMK is disabled."
+  alarm_description   = "Alarms when an API call is made modify, create, or destroy iam user, group, or credentials."
   alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
   tags                = var.tags
+}
+
+##### Test out custom module
+## Shortens code by 12 lines
+
+module "cloudwatch_metric_filter_and_alarm" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-test-changes"
+  pattern                         = "{ ($.eventName=AddUserToGroup)||($.eventName=AttachUserPolicy)||($.eventName=ChangePassword)||($.eventName=CreateAccessKey)||($.eventName=CreateGroup)||($.eventName=CreateLoginProfile)||($.eventName=CreateRole)||($.eventName=alerts)||($.eventName=DeactivateMFADevice)||($.eventName=DeleteAccessKey)||($.eventName=DeleteAccountPasswordPolicy)||($.eventName=DeleteGroup)||($.eventName=DeleteGroupPolicy)||($.eventName=DeleteLoginProfile)||($.eventName=DeleteUser)||($.eventName=DeleteUserPolicy)||($.eventName=DeleteUserPermissionsBoundary)||($.eventName=DeleteVirtualMFADevice)||($.eventName=DetachGroupPolicy)||($.eventName=DetachRolePolicy)||($.eventName=DetachUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutUserPolicy)||($.eventName=PutUserPermissionsBoundary)||($.eventName=RemoveUserFromGroup)||($.eventName=UntagUser)||($.eventName=UpdateAccessKey)||($.eventName=UpdateAccountPasswordPolicy)||($.eventName=UpdateGroup)||($.eventName=UpdateLoginProfile)||($.eventName=UpdateServiceSpecificCredential) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API call is made modify, create, or destroy iam user, group, or credentials."
+  metric_transformation_name      = "${local.uname}-test-changes-counter"
+  tags                            = var.tags
 }
