@@ -15,5 +15,8 @@ sudo ./aws/install
 # download docker
 echo "installing docker"
 sudo yum install docker -y
+echo "enabling docker"
+sudo systemctl enable --now docker
+
 
 echo "userdata complete"
