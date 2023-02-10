@@ -67,4 +67,13 @@ data "aws_iam_policy_document" "ssm_access_policy_doc" {
   }
 }
 
+data "aws_iam_policy_document" "kubeconfig_access_policy_doc" {
+  version = "2012-10-17"
+  statement {
+    effect  = "Allow"
+    actions = ["eks:*"]
+    resources = ["*"]
+  }
+}
+
 data "aws_caller_identity" "current" {}

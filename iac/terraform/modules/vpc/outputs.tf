@@ -9,3 +9,7 @@ output "bastion_subnet_id" {
 output "rke2_subnet_ids" {
   value = module.vpc.private_subnets
 }
+
+output "private_subnet_ids" {
+  value = module.vpc.private_subnets
+}
