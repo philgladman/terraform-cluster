@@ -90,4 +90,19 @@ echo "kubectl installed and kube dir created"
 echo -e $(aws ssm get-parameter --name ${MASTER_KEY_SSM_NAME} --with-decryption | jq '.[].Value' | cut -d '"' -f 2) > /home/ec2-user/.ssh/master-key && chown ec2-user:ec2-user /home/ec2-user/.ssh/master-key && chmod 600 /home/ec2-user/.ssh/master-key
 echo "master key downloaded"
 
+# Download Homebrew 
+echo "installing homebrew"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Download Terraform
+echo "installing terraform"
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
+sudo yum -y install terraform
+
+# Download Terragrunt
+echo "installing terrgrunt"
+sudo brew install terragrunt
+
+
 echo "userdata complete"
