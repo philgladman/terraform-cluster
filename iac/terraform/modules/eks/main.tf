@@ -159,7 +159,7 @@ module "eks" {
     }
   }
   # aws-auth configmap
-  create_aws_auth_configmap = true
+  create_aws_auth_configmap = false
   manage_aws_auth_configmap = true
 
   aws_auth_roles = [
@@ -203,7 +203,6 @@ data "aws_eks_cluster_auth" "default" {
     module.eks.eks_managed_node_groups,
   ]
 }
-
 
 provider "kubernetes" {
   host                   = data.aws_eks_cluster.default.endpoint
