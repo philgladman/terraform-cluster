@@ -4,7 +4,7 @@ echo "starting userdata"
 
 ## install tools
 echo "installing tools"
-sudo yum install -y curl wget unzip git vim jq
+sudo yum install -y curl wget unzip git vim jq python3
 
 # download awscli
 echo "installing awscli"
@@ -90,10 +90,6 @@ echo "kubectl installed and kube dir created"
 echo -e $(aws ssm get-parameter --name ${MASTER_KEY_SSM_NAME} --with-decryption | jq '.[].Value' | cut -d '"' -f 2) > /home/ec2-user/.ssh/master-key && chown ec2-user:ec2-user /home/ec2-user/.ssh/master-key && chmod 600 /home/ec2-user/.ssh/master-key
 echo "master key downloaded"
 
-# Download Homebrew 
-echo "installing homebrew"
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
 # Download Terraform
 echo "installing terraform"
 sudo yum install -y yum-utils
@@ -102,7 +98,8 @@ sudo yum -y install terraform
 
 # Download Terragrunt
 echo "installing terrgrunt"
-sudo brew install terragrunt
+sudo wget -O /usr/local/bin/terragrunt https://github.com/gruntwork-io/terragrunt/releases/download/v0.43.2/terragrunt_linux_amd64
+sudo chmod +x /usr/local/bin/terragrunt
 
 
 echo "userdata complete"
