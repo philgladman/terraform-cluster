@@ -27,6 +27,16 @@ dependency "sops" {
 
 dependency "bastion" {
   config_path = "../bastion"
+}
+
+# enumerate all the Terragrunt modules that need to be applied in order for this module to be able to apply
+dependencies {
+  paths = [
+    "..//vpc",
+    "..//master-pem",
+    "..//sops",
+    "..//bastion"
+  ]
 } */
 
 inputs = {

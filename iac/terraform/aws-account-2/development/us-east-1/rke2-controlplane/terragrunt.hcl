@@ -29,6 +29,16 @@ dependency "bastion" {
   config_path = "../bastion"
 }
 
+# enumerate all the Terragrunt modules that need to be applied in order for this module to be able to apply
+dependencies {
+  paths = [
+    "..//vpc",
+    "..//master-pem",
+    "..//sops",
+    "..//bastion"
+  ]
+}
+
 inputs = {
   resource_name              = "phil-${local.common.locals.env_name}"
   source_ami                 = "${local.rke2.locals.source_ami}"

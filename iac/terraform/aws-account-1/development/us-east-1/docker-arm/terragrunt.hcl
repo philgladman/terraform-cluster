@@ -29,6 +29,16 @@ dependency "bastion" {
   config_path = "../bastion"
 }
 
+# enumerate all the Terragrunt modules that need to be applied in order for this module to be able to apply
+dependencies {
+  paths = [
+    "..//vpc",
+    "..//master-pem",
+    "..//sops",
+    "..//bastion"
+  ]
+}
+
 inputs = {
   resource_name              = "phil-${local.common.locals.env_name}"
   docker_arm_ami             = "ami-03a45a5ac837f33b7"

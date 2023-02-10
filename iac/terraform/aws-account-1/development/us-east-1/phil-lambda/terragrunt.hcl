@@ -12,13 +12,6 @@ include {
     path = find_in_parent_folders()
 }
 
-dependencies {
-  paths = [
-    "..//vpc",
-    "..//sops",
-    "..//master-pem"
-  ]
-}
 
 dependency "master-pem" {
   config_path = "..//master-pem"
@@ -26,6 +19,14 @@ dependency "master-pem" {
 
 dependency "sops" {
   config_path = "..//sops"
+}
+
+# enumerate all the Terragrunt modules that need to be applied in order for this module to be able to apply
+dependencies {
+  paths = [
+    "..//master-pem",
+    "..//sops"
+  ]
 }
 
 inputs = {

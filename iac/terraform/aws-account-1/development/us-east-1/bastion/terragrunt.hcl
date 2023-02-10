@@ -25,6 +25,15 @@ dependency "sops" {
   config_path = "../sops"
 }
 
+# enumerate all the Terragrunt modules that need to be applied in order for this module to be able to apply
+dependencies {
+  paths = [
+    "..//vpc",
+    "..//master-pem",
+    "..//sops"
+  ]
+}
+
 inputs = {
   resource_name              = "phil-${local.common.locals.env_name}"
   bastion_ami                = "ami-06640050dc3f556bb"
