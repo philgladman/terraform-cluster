@@ -3,23 +3,8 @@ locals {
 }
 
 ###
-# Create cloudtrail s3 bucket
+# Create S3 bucket for Cloudtrail
 ###
-
-/* resource "aws_kms_key" "s3_key" {
-  description             = "s3 kms key"
-  key_usage               = "ENCRYPT_DECRYPT"
-  deletion_window_in_days = 10
-  is_enabled              = true
-  enable_key_rotation     = true
-  multi_region            = false
-  tags                    = var.tags
-}
-
-resource "aws_kms_alias" "s3_alias" {
-  name          = "alias/${local.uname}-s3-key"
-  target_key_id = aws_kms_key.s3_key.key_id
-} */
 
 module "s3_key" {
   source  = "../common/kms"
@@ -27,7 +12,39 @@ module "s3_key" {
   kms_description = "s3 kms key"
   kms_alias       = "${local.uname}-s3-key"
   tags            = var.tags
+  kms_policy      = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "key-default-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
 }
+POLICY
+}
+
+    /* {
+      "Sid": "Allow_Cloudtrail",
+      "Effect": "Allow",
+      "Principal": {
+        "Service":[
+          "cloudtrail.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "kms:DescribeKey",
+        "kms:GenerateDataKey"
+      ],
+      "Resource": "*"
+    } */
 
 resource "random_password" "bucket_name_suffix" {
   length  = 5
@@ -59,41 +76,45 @@ resource "aws_s3_bucket_policy" "cloudtrail_s3_bucket_policy" {
   bucket = aws_s3_bucket.cloudtrail_s3_bucket.id
   policy = <<POLICY
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "AWSCloudTrailAclCheck",
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "cloudtrail.amazonaws.com"
-            },
-            "Action": "s3:GetBucketAcl",
-            "Resource": "${aws_s3_bucket.cloudtrail_s3_bucket.arn}",
-            "Condition": {
-                "StringEquals": {
-                    "AWS:SourceArn": "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${local.uname}-${var.trail_name}"
-                }
-            }
-        },
-        {
-            "Sid": "AWSCloudTrailWrite",
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "cloudtrail.amazonaws.com"
-            },
-            "Action": "s3:PutObject",
-            "Resource": "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
-            "Condition": {
-                "StringEquals": {
-                    "AWS:SourceArn": "arn:aws:cloudtrail:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:trail/${local.uname}-${var.trail_name}",
-                    "s3:x-amz-acl": "bucket-owner-full-control"
-                }
-            }
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "s3:GetBucketAcl",
+      "Resource": "${aws_s3_bucket.cloudtrail_s3_bucket.arn}",
+      "Condition": {
+        "StringLike": {
+          "AWS:SourceArn": "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/${local.uname}-${var.trail_name}"
         }
-    ]
+      }
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        },
+        "StringLike": {
+          "AWS:SourceArn": "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/${local.uname}-${var.trail_name}"
+        }
+      }
+    }
+  ]
 }
 POLICY
 }
+
+
 
 
 resource "aws_s3_bucket_public_access_block" "restrict_s3_bucket" {
@@ -108,13 +129,44 @@ resource "aws_s3_bucket_public_access_block" "restrict_s3_bucket" {
 # Create alerts sns topic
 ###
 
-/* module "sns_key" {
+module "sns_key" {
   source  = "../common/kms"
 
   kms_description = "sns kms key"
   kms_alias       = "${local.uname}-sns-key"
   tags            = var.tags
-} */
+  kms_policy      = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "key-default-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Allow_CloudWatch_for_CMK",
+      "Effect": "Allow",
+      "Principal": {
+        "Service":[
+          "cloudwatch.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "kms:Decrypt",
+        "kms:GenerateDataKey*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
 
 module "sns_topic" {
   source  = "terraform-aws-modules/sns/aws"
@@ -124,7 +176,7 @@ module "sns_topic" {
   display_name      = "${local.uname}-${var.topic_name}"
   create_sns_topic  = true
   fifo_topic        = false
-  # kms_master_key_id = var.sns_kms_key_id
+  kms_master_key_id = module.sns_key.kms_key_id
 
   tags              = var.tags
 }
@@ -140,8 +192,53 @@ resource "aws_sns_topic_subscription" "sns_topic_subscription" {
 # Create Cloudwatch Log Group
 ###
 
-resource "aws_iam_role" "cloudwatch_role" {
-  name   = "${local.uname}-cloudwatch-role"
+module "cloudwatch_key" {
+  source  = "../common/kms"
+
+  kms_description = "cloudwatch kms key"
+  kms_alias       = "${local.uname}-cloudwatch-key"
+  tags            = var.tags
+  kms_policy      = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "key-default-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
+      },
+      "Action": [
+        "kms:Encrypt*",
+        "kms:Decrypt*",
+        "kms:ReEncrypt*",
+        "kms:GenerateDataKey*",
+        "kms:Describe*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnLike": {
+          "kms:EncryptionContext:aws:logs:arn": "arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:*"
+        }
+      }
+    }    
+  ]
+}
+POLICY
+}
+
+
+resource "aws_iam_role" "cloudtrail_role" {
+  name   = "${local.uname}-cloudtrail-role"
   assume_role_policy = jsonencode(
     {
     "Version": "2012-10-17",
@@ -159,8 +256,8 @@ resource "aws_iam_role" "cloudwatch_role" {
   tags = var.tags
 }
 
-resource "aws_iam_policy" "cloudwatch_role_policy" {
-  name         = "${local.uname}-cloudwatch-access"
+resource "aws_iam_policy" "cloudtrail_role_policy" {
+  name         = "${local.uname}-cloudtrail-access"
   path         = "/"
   description  = "Allow CloudTrail to send logs to CloudWatch Logs"
   policy = jsonencode(
@@ -181,36 +278,109 @@ resource "aws_iam_policy" "cloudwatch_role_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
-  role        = aws_iam_role.cloudwatch_role.name
-  policy_arn  = aws_iam_policy.cloudwatch_role_policy.arn
+  role        = aws_iam_role.cloudtrail_role.name
+  policy_arn  = aws_iam_policy.cloudtrail_role_policy.arn
 }
 
 resource "aws_cloudwatch_log_group" "alerts_log_group" {
-  name       = "${local.uname}-alerts-log-group"
-  #kms_key_id = var.ebs_kms_key_arn
-  tags       = var.tags
+  name              = "${local.uname}-alerts-log-group"
+  retention_in_days = 365
+  kms_key_id        = module.cloudwatch_key.kms_key_arn
+  tags              = var.tags
 }
 
 ###
 # Create Cloudtrail Trail
 ###
+
+module "cloudtrail_key" {
+  source  = "../common/kms"
+
+  kms_description = "cloudtrail kms key"
+  kms_alias       = "${local.uname}-cloudtrail-key"
+  tags            = var.tags
+  kms_policy      = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "key-default-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Allow CloudTrail to encrypt logs",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "kms:GenerateDataKey*",
+      "Resource": "*",
+      "Condition": {
+        "ArnLike": {
+          "kms:EncryptionContext:aws:cloudtrail:arn": "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*",
+          "AWS:SourceArn": "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"
+        }
+      }
+    },
+    {
+      "Sid": "Allow CloudTrail to describe key",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "kms:DescribeKey",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Allow principals in the account to decrypt log files",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": [
+        "kms:Decrypt",
+        "kms:ReEncryptFrom"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:CallerAccount": "${data.aws_caller_identity.current.account_id}"
+        },
+        "StringLike": {
+          "kms:EncryptionContext:aws:cloudtrail:arn": "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
 
 resource "aws_cloudtrail" "alerts_trail" {
   name                          = "${local.uname}-alerts-trail"
   s3_bucket_name                = aws_s3_bucket.cloudtrail_s3_bucket.id
   include_global_service_events = true
   enable_log_file_validation    = true
-  cloud_watch_logs_role_arn     = aws_iam_role.cloudwatch_role.arn
+  cloud_watch_logs_role_arn     = aws_iam_role.cloudtrail_role.arn
   cloud_watch_logs_group_arn    = "${aws_cloudwatch_log_group.alerts_log_group.arn}:*"
   is_multi_region_trail         = true
+  kms_key_id                    = module.cloudtrail_key.kms_key_arn
   tags                          = var.tags
 }
 
 ###
-# Create Cloudtrail Trail
+# Create Cloudwatch Alarms & Metrics
 ###
 
-resource "aws_cloudwatch_log_metric_filter" "console_signon_failure_metric_filter" {
+## Without module
+
+/* resource "aws_cloudwatch_log_metric_filter" "console_signon_failure_metric_filter" {
   name           = "${local.uname}-console-signon-failure"
   pattern        = "{ ($.eventName = ConsoleLogin) && ($.errorMessage = \"Failed authentication\") }"
   log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
@@ -234,296 +404,9 @@ resource "aws_cloudwatch_metric_alarm" "console_signon_failure_alarm" {
   alarm_description   = "Alarms when an unauthenticated API call is made to sign into the console."
   alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
   tags                = var.tags
-}
+} */
 
-resource "aws_cloudwatch_log_metric_filter" "security_group_changes_metric_filter" {
-  name           = "${local.uname}-security-group-changes"
-  pattern        = "{ ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup) }"
-  log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-
-  metric_transformation {
-    name      = "${local.uname}-security-group-changes-counter"
-    namespace = "${local.uname}-cloudtrail-metrics"
-    value     = "1"
-  }
-}
-
-resource "aws_cloudwatch_metric_alarm" "security_group_changes_alarm" {
-  alarm_name          = "${local.uname}-security-group-changes"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "${local.uname}-security-group-changes-counter"
-  namespace           = "${local.uname}-cloudtrail-metrics"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "1"
-  alarm_description   = "Alarms when an API call is made to create, update or delete a Security Group."
-  alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
-  tags                = var.tags
-}
-
-resource "aws_cloudwatch_log_metric_filter" "network_acl_changes_metric_filter" {
-  name           = "${local.uname}-network-acl-changes"
-  pattern        = "{ ($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation) }"
-  log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-
-  metric_transformation {
-    name      = "${local.uname}-network-acl-changes-counter"
-    namespace = "${local.uname}-cloudtrail-metrics"
-    value     = "1"
-  }
-}
-
-resource "aws_cloudwatch_metric_alarm" "network_acl_changes_alarm" {
-  alarm_name          = "${local.uname}-network-acl-changes"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "${local.uname}-network-acl-changes-counter"
-  namespace           = "${local.uname}-cloudtrail-metrics"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "1"
-  alarm_description   = "Alarms when an API call is made to create, update or delete a Network ACL."
-  alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
-  tags                = var.tags
-}
-
-resource "aws_cloudwatch_log_metric_filter" "gateway_changes_metric_filter" {
-  name           = "${local.uname}-gateway-changes"
-  pattern        = "{ ($.eventName = CreateCustomerGateway) || ($.eventName = DeleteCustomerGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = CreateInternetGateway) || ($.eventName = DeleteInternetGateway) || ($.eventName = DetachInternetGateway) }"
-  log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-
-  metric_transformation {
-    name      = "${local.uname}-gateway-changes-counter"
-    namespace = "${local.uname}-cloudtrail-metrics"
-    value     = "1"
-  }
-}
-
-resource "aws_cloudwatch_metric_alarm" "gateway_changes_alarm" {
-  alarm_name          = "${local.uname}-gateway-changes"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "${local.uname}-gateway-changes-counter"
-  namespace           = "${local.uname}-cloudtrail-metrics"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "1"
-  alarm_description   = "Alarms when an API call is made to create, update or delete a Customer or Internet Gateway."
-  alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
-  tags                = var.tags
-}
-
-resource "aws_cloudwatch_log_metric_filter" "vpc_changes_metric_filter" {
-  name           = "${local.uname}-vpc-changes"
-  pattern        = "{ ($.eventName = CreateVpc) || ($.eventName = DeleteVpc) || ($.eventName = ModifyVpcAttribute) || ($.eventName = AcceptVpcPeeringConnection) || ($.eventName = CreateVpcPeeringConnection) || ($.eventName = DeleteVpcPeeringConnection) || ($.eventName = RejectVpcPeeringConnection) || ($.eventName = AttachClassicLinkVpc) || ($.eventName = DetachClassicLinkVpc) || ($.eventName = DisableVpcClassicLink) || ($.eventName = EnableVpcClassicLink) }"
-  log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-
-  metric_transformation {
-    name      = "${local.uname}-vpc-changes-counter"
-    namespace = "${local.uname}-cloudtrail-metrics"
-    value     = "1"
-  }
-}
-
-resource "aws_cloudwatch_metric_alarm" "vpc_changes_alarm" {
-  alarm_name          = "${local.uname}-vpc-changes"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "${local.uname}-vpc-changes-counter"
-  namespace           = "${local.uname}-cloudtrail-metrics"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "1"
-  alarm_description   = "Alarms when an API call is made to create, update or delete a VPC, VPC peering connection or VPC connection to classic."
-  alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
-  tags                = var.tags
-}
-
-resource "aws_cloudwatch_log_metric_filter" "ec2_instance_changes_metric_filter" {
-  name           = "${local.uname}-ec2-instance-changes"
-  pattern        = "{ ($.eventName = RunInstances) || ($.eventName = RebootInstances) || ($.eventName = StartInstances) || ($.eventName = StopInstances) || ($.eventName = TerminateInstances) }"
-  log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-
-  metric_transformation {
-    name      = "${local.uname}-ec2-instance-changes-counter"
-    namespace = "${local.uname}-cloudtrail-metrics"
-    value     = "1"
-  }
-}
-
-resource "aws_cloudwatch_metric_alarm" "ec2_instance_changes_alarm" {
-  alarm_name          = "${local.uname}-ec2-instance-changes"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "${local.uname}-ec2-instance-changes-counter"
-  namespace           = "${local.uname}-cloudtrail-metrics"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "1"
-  alarm_description   = "Alarms when an API call is made to create, terminate, start, stop or reboot an EC2 instance."
-  alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
-  tags                = var.tags
-}
-
-resource "aws_cloudwatch_log_metric_filter" "ec2_large_instance_changes_metric_filter" {
-  name           = "${local.uname}-ec2-large-instance-changes"
-  pattern        = "{ ($.eventName = RunInstances) && (($.requestParameters.instanceType = *.8xlarge) || ($.requestParameters.instanceType = *.4xlarge)) }"
-  log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-
-  metric_transformation {
-    name      = "${local.uname}-ec2-large-instance-changes-counter"
-    namespace = "${local.uname}-cloudtrail-metrics"
-    value     = "1"
-  }
-}
-
-resource "aws_cloudwatch_metric_alarm" "ec2_large_instance_changes_alarm" {
-  alarm_name          = "${local.uname}-ec2-large-instance-changes"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "${local.uname}-ec2-large-instance-changes-counter"
-  namespace           = "${local.uname}-cloudtrail-metrics"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "1"
-  alarm_description   = "Alarms when an API call is made to create, terminate, start, stop or reboot a 4x or 8x-large EC2 instance."
-  alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
-  tags                = var.tags
-}
-
-resource "aws_cloudwatch_log_metric_filter" "cloudtrail_changes_metric_filter" {
-  name           = "${local.uname}-cloudtrail-changes"
-  pattern        = "{ ($.eventName = CreateTrail) || ($.eventName = UpdateTrail) || ($.eventName = DeleteTrail) || ($.eventName = StartLogging) || ($.eventName = StopLogging) }"
-  log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-
-  metric_transformation {
-    name      = "${local.uname}-cloudtrail-changes-counter"
-    namespace = "${local.uname}-cloudtrail-metrics"
-    value     = "1"
-  }
-}
-
-resource "aws_cloudwatch_metric_alarm" "cloudtrail_changes_alarm" {
-  alarm_name          = "${local.uname}-cloudtrail-changes"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "${local.uname}-cloudtrail-changes-counter"
-  namespace           = "${local.uname}-cloudtrail-metrics"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "1"
-  alarm_description   = "Alarms when an API call is made to create, update or delete a CloudTrail trail, or to start or stop logging to a trail."
-  alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
-  tags                = var.tags
-}
-
-resource "aws_cloudwatch_log_metric_filter" "auth_failure_metric_filter" {
-  name           = "${local.uname}-auth-failure"
-  pattern        = "{ ($.errorCode = \"*UnauthorizedOperation\") || ($.errorCode = \"AccessDenied*\") }"
-  log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-
-  metric_transformation {
-    name      = "${local.uname}-auth-failure-counter"
-    namespace = "${local.uname}-cloudtrail-metrics"
-    value     = "1"
-  }
-}
-
-resource "aws_cloudwatch_metric_alarm" "auth_failure_alarm" {
-  alarm_name          = "${local.uname}-auth-failure"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "${local.uname}-auth-failure-counter"
-  namespace           = "${local.uname}-cloudtrail-metrics"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "1"
-  alarm_description   = "Alarms when an unauthorized API call is made."
-  alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
-  tags                = var.tags
-}
-
-resource "aws_cloudwatch_log_metric_filter" "iam_policy_changes_metric_filter" {
-  name           = "${local.uname}-iam-policy-changes"
-  pattern        = "{ ($.eventName = DeleteGroupPolicy) || ($.eventName = DeleteRolePolicy) || ($.eventName = DeleteUserPolicy) || ($.eventName = PutGroupPolicy) || ($.eventName = PutRolePolicy) || ($.eventName = PutUserPolicy) || ($.eventName = CreatePolicy) || ($.eventName = DeletePolicy) || ($.eventName = CreatePolicyVersion) || ($.eventName = DeletePolicyVersion) || ($.eventName = AttachRolePolicy) || ($.eventName = DetachRolePolicy) || ($.eventName = AttachUserPolicy) || ($.eventName = DetachUserPolicy) || ($.eventName=AttachGroupPolicy) || ($.eventName = DetachGroupPolicy) }"
-  log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-
-  metric_transformation {
-    name      = "${local.uname}-iam-policy-changes-counter"
-    namespace = "${local.uname}-cloudtrail-metrics"
-    value     = "1"
-  }
-}
-
-resource "aws_cloudwatch_metric_alarm" "iam_policy_changes_alarm" {
-  alarm_name          = "${local.uname}-iam-policy-changes"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "${local.uname}-iam-policy-changes-counter"
-  namespace           = "${local.uname}-cloudtrail-metrics"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "1"
-  alarm_description   = "Alarms when an API call is made to change an IAM policy."
-  alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
-  tags                = var.tags
-}
-
-resource "aws_cloudwatch_log_metric_filter" "cmk_changes_metric_filter" {
-  name           = "${local.uname}-cmk-changes"
-  pattern        = "{ ($.eventSource = kms.amazonaws.com)&&($.eventName = DisableKey)||($.eventName = ScheduleKeyDeletion)||($.eventName = PutKeyPolicy) }"
-  log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-
-  metric_transformation {
-    name      = "${local.uname}-cmk-changes-counter"
-    namespace = "${local.uname}-cloudtrail-metrics"
-    value     = "1"
-  }
-}
-
-resource "aws_cloudwatch_metric_alarm" "cmk_changes_alarm" {
-  alarm_name          = "${local.uname}-cmk-changes"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "${local.uname}-cmk-changes-counter"
-  namespace           = "${local.uname}-cloudtrail-metrics"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "1"
-  alarm_description   = "Alarms when an API call is made to schedule the deletion of a CMK, or a CMK is disabled."
-  alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
-  tags                = var.tags
-}
-
-resource "aws_cloudwatch_log_metric_filter" "user_group_changes_metric_filter" {
-  name           = "${local.uname}-user-group-changes"
-  pattern        = "{ ($.eventName=AddUserToGroup)||($.eventName=AttachUserPolicy)||($.eventName=ChangePassword)||($.eventName=CreateAccessKey)||($.eventName=CreateGroup)||($.eventName=CreateLoginProfile)||($.eventName=CreateRole)||($.eventName=alerts)||($.eventName=DeactivateMFADevice)||($.eventName=DeleteAccessKey)||($.eventName=DeleteAccountPasswordPolicy)||($.eventName=DeleteGroup)||($.eventName=DeleteGroupPolicy)||($.eventName=DeleteLoginProfile)||($.eventName=DeleteUser)||($.eventName=DeleteUserPolicy)||($.eventName=DeleteUserPermissionsBoundary)||($.eventName=DeleteVirtualMFADevice)||($.eventName=DetachGroupPolicy)||($.eventName=DetachRolePolicy)||($.eventName=DetachUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutUserPolicy)||($.eventName=PutUserPermissionsBoundary)||($.eventName=RemoveUserFromGroup)||($.eventName=UntagUser)||($.eventName=UpdateAccessKey)||($.eventName=UpdateAccountPasswordPolicy)||($.eventName=UpdateGroup)||($.eventName=UpdateLoginProfile)||($.eventName=UpdateServiceSpecificCredential) }"
-  log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-
-  metric_transformation {
-    name      = "${local.uname}-user-group-changes-counter"
-    namespace = "${local.uname}-cloudtrail-metrics"
-    value     = "1"
-  }
-}
-
-resource "aws_cloudwatch_metric_alarm" "user_group_changes_alarm" {
-  alarm_name          = "${local.uname}-user-group-changes"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "${local.uname}-user-group-changes-counter"
-  namespace           = "${local.uname}-cloudtrail-metrics"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "1"
-  alarm_description   = "Alarms when an API call is made modify, create, or destroy iam user, group, or credentials."
-  alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
-  tags                = var.tags
-}
-
-##### Test out custom module
-## Shortens code by 12 lines
+## With new custom module 
 
 module "cloudwatch_metric_filter_and_alarm" {
   source  = "./metrics-and-alarms"
@@ -533,6 +416,150 @@ module "cloudwatch_metric_filter_and_alarm" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made modify, create, or destroy iam user, group, or credentials."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
   metric_transformation_name      = "${local.uname}-test-changes-counter"
+  tags                            = var.tags
+}
+
+module "console_signon_failure" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-console-signon-failure"
+  pattern                         = "{ ($.eventName = ConsoleLogin) && ($.errorMessage = \"Failed authentication\") }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an unauthenticated API call is made to sign into the console."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-console-signon-failure-counter"
+  tags                            = var.tags
+}
+
+module "security_group_changes" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-security-group-changes"
+  pattern                         = "{ ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API call is made to create, update or delete a Security Group."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-security-group-changes-counter"
+  tags                            = var.tags
+}
+
+module "network_acl_changes" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-network-acl-changes"
+  pattern                         = "{ ($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API call is made to create, update or delete a Network ACL."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-network-acl-changes-counter"
+  tags                            = var.tags
+}
+
+module "gateway_changes" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-gateway-changes"
+  pattern                         = "{ ($.eventName = CreateCustomerGateway) || ($.eventName = DeleteCustomerGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = CreateInternetGateway) || ($.eventName = DeleteInternetGateway) || ($.eventName = DetachInternetGateway) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API call is made to create, update or delete a Customer or Internet Gateway."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-gateway-changes-counter"
+  tags                            = var.tags
+}
+
+module "ec2_instance_changes" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-ec2-instance-changes"
+  pattern                         = "{ ($.eventName = RunInstances) || ($.eventName = RebootInstances) || ($.eventName = StartInstances) || ($.eventName = StopInstances) || ($.eventName = TerminateInstances) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API call is made to create, terminate, start, stop or reboot an EC2 instance."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-ec2-instance-changes-counter"
+  tags                            = var.tags
+}
+
+module "ec2_large_instance_changes" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-ec2-large-instance-changes"
+  pattern                         = "{ ($.eventName = RunInstances) && (($.requestParameters.instanceType = *.8xlarge) || ($.requestParameters.instanceType = *.4xlarge)) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API call is made to create, terminate, start, stop or reboot an EC2 instance."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-ec2-large-instance-changes-counter"
+  tags                            = var.tags
+}
+
+module "cloudtrail_changes" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-cloudtrail-changes"
+  pattern                         = "{ ($.eventName = CreateTrail) || ($.eventName = UpdateTrail) || ($.eventName = DeleteTrail) || ($.eventName = StartLogging) || ($.eventName = StopLogging) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API call is made to create, update or delete a CloudTrail trail, or to start or stop logging to a trail."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-cloudtrail-changes-counter"
+  tags                            = var.tags
+}
+
+module "auth_failure" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-auth-failure"
+  pattern                         = "{ ($.errorCode = \"*UnauthorizedOperation\") || ($.errorCode = \"AccessDenied*\") }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an unauthorized API call is made."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-auth-failure-counter"
+  tags                            = var.tags
+}
+
+module "iam_policy_changes" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-iam-policy-changes"
+  pattern                         = "{ ($.eventName = DeleteGroupPolicy) || ($.eventName = DeleteRolePolicy) || ($.eventName = DeleteUserPolicy) || ($.eventName = PutGroupPolicy) || ($.eventName = PutRolePolicy) || ($.eventName = PutUserPolicy) || ($.eventName = CreatePolicy) || ($.eventName = DeletePolicy) || ($.eventName = CreatePolicyVersion) || ($.eventName = DeletePolicyVersion) || ($.eventName = AttachRolePolicy) || ($.eventName = DetachRolePolicy) || ($.eventName = AttachUserPolicy) || ($.eventName = DetachUserPolicy) || ($.eventName=AttachGroupPolicy) || ($.eventName = DetachGroupPolicy) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API call is made to change an IAM policy."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-iam-policy-changes-counter"
+  tags                            = var.tags
+}
+
+module "cmk_changes" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-cmk-changes"
+  pattern                         = "{ ($.eventSource = kms.amazonaws.com)&&($.eventName = DisableKey)||($.eventName = ScheduleKeyDeletion)||($.eventName = PutKeyPolicy) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API call is made to schedule the deletion of a CMK, or a CMK is disabled."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-cmk-changes-counter"
+  tags                            = var.tags
+}
+
+module "user_group_changes" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-user-group-changes"
+  pattern                         = "{ ($.eventName=AddUserToGroup)||($.eventName=AttachUserPolicy)||($.eventName=ChangePassword)||($.eventName=CreateAccessKey)||($.eventName=CreateGroup)||($.eventName=CreateLoginProfile)||($.eventName=CreateRole)||($.eventName=alerts)||($.eventName=DeactivateMFADevice)||($.eventName=DeleteAccessKey)||($.eventName=DeleteAccountPasswordPolicy)||($.eventName=DeleteGroup)||($.eventName=DeleteGroupPolicy)||($.eventName=DeleteLoginProfile)||($.eventName=DeleteUser)||($.eventName=DeleteUserPolicy)||($.eventName=DeleteUserPermissionsBoundary)||($.eventName=DeleteVirtualMFADevice)||($.eventName=DetachGroupPolicy)||($.eventName=DetachRolePolicy)||($.eventName=DetachUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutUserPolicy)||($.eventName=PutUserPermissionsBoundary)||($.eventName=RemoveUserFromGroup)||($.eventName=UntagUser)||($.eventName=UpdateAccessKey)||($.eventName=UpdateAccountPasswordPolicy)||($.eventName=UpdateGroup)||($.eventName=UpdateLoginProfile)||($.eventName=UpdateServiceSpecificCredential) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API call is made modify, create, or destroy iam user, group, or credentials."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-user-group-changes-counter"
   tags                            = var.tags
 }
