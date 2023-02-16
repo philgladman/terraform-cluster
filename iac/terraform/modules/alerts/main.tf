@@ -150,7 +150,7 @@ module "sns_key" {
       "Resource": "*"
     },
     {
-      "Sid": "Allow_CloudWatch_for_CMK",
+      "Sid": "Allow Cloudwatch to use key",
       "Effect": "Allow",
       "Principal": {
         "Service":[
@@ -213,6 +213,7 @@ module "cloudwatch_key" {
       "Resource": "*"
     },
     {
+      "Sid": "Allow Cloudwatch to use key",
       "Effect": "Allow",
       "Principal": {
         "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
@@ -234,59 +235,6 @@ module "cloudwatch_key" {
   ]
 }
 POLICY
-}
-
-
-resource "aws_iam_role" "cloudtrail_role" {
-  name   = "${local.uname}-cloudtrail-role"
-  assume_role_policy = jsonencode(
-    {
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Action": "sts:AssumeRole",
-        "Principal": {
-          "Service": "cloudtrail.amazonaws.com"
-        },
-        "Effect": "Allow",
-        "Sid": ""
-      }
-      ]
-    })
-  tags = var.tags
-}
-
-resource "aws_iam_policy" "cloudtrail_role_policy" {
-  name         = "${local.uname}-cloudtrail-access"
-  path         = "/"
-  description  = "Allow CloudTrail to send logs to CloudWatch Logs"
-  policy = jsonencode(
-  {
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Effect": "Allow",
-        "Action": [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        "Resource": "${aws_cloudwatch_log_group.alerts_log_group.arn}:log-stream:*"
-      }
-    ]
-  })
-  tags = var.tags
-}
-
-resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
-  role        = aws_iam_role.cloudtrail_role.name
-  policy_arn  = aws_iam_policy.cloudtrail_role_policy.arn
-}
-
-resource "aws_cloudwatch_log_group" "alerts_log_group" {
-  name              = "${local.uname}-alerts-log-group"
-  retention_in_days = 365
-  kms_key_id        = module.cloudwatch_key.kms_key_arn
-  tags              = var.tags
 }
 
 ###
@@ -362,6 +310,58 @@ module "cloudtrail_key" {
 POLICY
 }
 
+resource "aws_iam_role" "cloudtrail_role" {
+  name   = "${local.uname}-cloudtrail-role"
+  assume_role_policy = jsonencode(
+    {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Action": "sts:AssumeRole",
+        "Principal": {
+          "Service": "cloudtrail.amazonaws.com"
+        },
+        "Effect": "Allow",
+        "Sid": ""
+      }
+      ]
+    })
+  tags = var.tags
+}
+
+resource "aws_iam_policy" "cloudtrail_role_policy" {
+  name         = "${local.uname}-cloudtrail-access"
+  path         = "/"
+  description  = "Allow CloudTrail to send logs to CloudWatch Logs"
+  policy = jsonencode(
+  {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource": "${aws_cloudwatch_log_group.alerts_log_group.arn}:log-stream:*"
+      }
+    ]
+  })
+  tags = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
+  role        = aws_iam_role.cloudtrail_role.name
+  policy_arn  = aws_iam_policy.cloudtrail_role_policy.arn
+}
+
+resource "aws_cloudwatch_log_group" "alerts_log_group" {
+  name              = "${local.uname}-alerts-log-group"
+  retention_in_days = 365
+  kms_key_id        = module.cloudwatch_key.kms_key_arn
+  tags              = var.tags
+}
+
 resource "aws_cloudtrail" "alerts_trail" {
   name                          = "${local.uname}-alerts-trail"
   s3_bucket_name                = aws_s3_bucket.cloudtrail_s3_bucket.id
@@ -407,32 +407,6 @@ resource "aws_cloudwatch_metric_alarm" "console_signon_failure_alarm" {
 } */
 
 ## With new custom module 
-
-module "cloudwatch_metric_filter_and_alarm" {
-  source  = "./metrics-and-alarms"
-
-  name                            = "${local.uname}-test-changes"
-  pattern                         = "{ ($.eventName=AddUserToGroup)||($.eventName=AttachUserPolicy)||($.eventName=ChangePassword)||($.eventName=CreateAccessKey)||($.eventName=CreateGroup)||($.eventName=CreateLoginProfile)||($.eventName=CreateRole)||($.eventName=alerts)||($.eventName=DeactivateMFADevice)||($.eventName=DeleteAccessKey)||($.eventName=DeleteAccountPasswordPolicy)||($.eventName=DeleteGroup)||($.eventName=DeleteGroupPolicy)||($.eventName=DeleteLoginProfile)||($.eventName=DeleteUser)||($.eventName=DeleteUserPolicy)||($.eventName=DeleteUserPermissionsBoundary)||($.eventName=DeleteVirtualMFADevice)||($.eventName=DetachGroupPolicy)||($.eventName=DetachRolePolicy)||($.eventName=DetachUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutUserPolicy)||($.eventName=PutUserPermissionsBoundary)||($.eventName=RemoveUserFromGroup)||($.eventName=UntagUser)||($.eventName=UpdateAccessKey)||($.eventName=UpdateAccountPasswordPolicy)||($.eventName=UpdateGroup)||($.eventName=UpdateLoginProfile)||($.eventName=UpdateServiceSpecificCredential) }"
-  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
-  alarm_description               = "Alarms when an API call is made modify, create, or destroy iam user, group, or credentials."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
-  metric_transformation_name      = "${local.uname}-test-changes-counter"
-  tags                            = var.tags
-}
-
-module "console_signon_failure" {
-  source  = "./metrics-and-alarms"
-
-  name                            = "${local.uname}-console-signon-failure"
-  pattern                         = "{ ($.eventName = ConsoleLogin) && ($.errorMessage = \"Failed authentication\") }"
-  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
-  alarm_description               = "Alarms when an unauthenticated API call is made to sign into the console."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
-  metric_transformation_name      = "${local.uname}-console-signon-failure-counter"
-  tags                            = var.tags
-}
 
 module "security_group_changes" {
   source  = "./metrics-and-alarms"
@@ -538,11 +512,13 @@ module "iam_policy_changes" {
   tags                            = var.tags
 }
 
+## Alarms for C1
+
 module "cmk_changes" {
   source  = "./metrics-and-alarms"
 
   name                            = "${local.uname}-cmk-changes"
-  pattern                         = "{ ($.eventSource = kms.amazonaws.com)&&($.eventName = DisableKey)||($.eventName = ScheduleKeyDeletion)||($.eventName = PutKeyPolicy) }"
+  pattern                         = "{ ($.eventSource = kms.amazonaws.com)&&($.eventName = DisableKey)||($.eventName = ScheduleKeyDeletion) }"
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made to schedule the deletion of a CMK, or a CMK is disabled."
@@ -555,11 +531,50 @@ module "user_group_changes" {
   source  = "./metrics-and-alarms"
 
   name                            = "${local.uname}-user-group-changes"
-  pattern                         = "{ ($.eventName=AddUserToGroup)||($.eventName=AttachUserPolicy)||($.eventName=ChangePassword)||($.eventName=CreateAccessKey)||($.eventName=CreateGroup)||($.eventName=CreateLoginProfile)||($.eventName=CreateRole)||($.eventName=alerts)||($.eventName=DeactivateMFADevice)||($.eventName=DeleteAccessKey)||($.eventName=DeleteAccountPasswordPolicy)||($.eventName=DeleteGroup)||($.eventName=DeleteGroupPolicy)||($.eventName=DeleteLoginProfile)||($.eventName=DeleteUser)||($.eventName=DeleteUserPolicy)||($.eventName=DeleteUserPermissionsBoundary)||($.eventName=DeleteVirtualMFADevice)||($.eventName=DetachGroupPolicy)||($.eventName=DetachRolePolicy)||($.eventName=DetachUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutUserPolicy)||($.eventName=PutUserPermissionsBoundary)||($.eventName=RemoveUserFromGroup)||($.eventName=UntagUser)||($.eventName=UpdateAccessKey)||($.eventName=UpdateAccountPasswordPolicy)||($.eventName=UpdateGroup)||($.eventName=UpdateLoginProfile)||($.eventName=UpdateServiceSpecificCredential) }"
+  pattern                         = "{ ($.eventName=CreateUser)||($.eventName=CreateGroup)||($.eventName=CreateAccessKey)||($.eventName=CreateLoginProfile)||($.eventName=DeleteUser)||($.eventName=DeleteGroup)||($.eventName=DeleteAccessKey)||($.eventName=DeleteLoginProfile) }"
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made modify, create, or destroy iam user, group, or credentials."
   alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
   metric_transformation_name      = "${local.uname}-user-group-changes-counter"
+  tags                            = var.tags
+}
+
+module "root_user_access" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-root-user-access"
+  pattern                         = "{ ($.userIdentity.type = \"Root\") && ($.userIdentity.invokedBy NOT EXISTS) && ($.eventType != \"AwsServiceEvent\") }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API call is made to with the ROOT User credentials"
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-root-user-access-counter"
+  tags                            = var.tags
+}
+
+module "console_signon_failure" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-console-signon-failure"
+  pattern                         = "{ ($.eventName = ConsoleLogin) && ($.errorMessage = \"Failed authentication\") }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an unauthenticated API call is made to sign into the console."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-console-signon-failure-counter"
+  tags                            = var.tags
+}
+
+module "non_team_signin" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-non-team-signin"
+  pattern                         = "{ ($.eventName = ConsoleLogin) && (($.userIdentity.userName != \"phil\") || ($.userIdentity.userName != \"terraform\"))}"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an someone outside of the Team signs into our AWS Account."
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-non-team-signin-counter"
   tags                            = var.tags
 }
