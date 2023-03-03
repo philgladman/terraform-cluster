@@ -25,7 +25,7 @@ def lambda_handler(event, context):
     """When triggered, the lambda handler will email the ISSM to audit the Privledged Accounts"""
     try:
         response = sns.publish(
-            TopicArn="jim",
+            TopicArn=sns_topic_arn,
             Message=email_message,
             Subject='TCODE ISSM Quarterly Reminder',
             MessageStructure='string'
@@ -33,11 +33,8 @@ def lambda_handler(event, context):
         logging.info(" Publishing email to SNS Topic ARN: %s\n%s", 
             sns_topic_arn, response
         )
-
     except botocore.exceptions.ClientError as error:
         logging.error(
             " Cannot publish to SNS Topic ARN: %s\n%s", sns_topic_arn,
                 error.response['Error']['Message']
         )
-
-lambda_handler("test", "test")

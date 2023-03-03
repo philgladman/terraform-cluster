@@ -35,6 +35,7 @@ dependencies {
 
 inputs = {
 resource_name = "phil-${local.common.locals.env_name}"
+logging_level = "INFO"
 region        = local.region.locals.region
 /* sns_topic_arn = dependencies.alerts.outputs.sns_topic_arnsns_topic_arn */
 sns_topic_arn = "arn:aws:sns:us-east-1:567243246807:Test-SNS-Topic"

@@ -18,6 +18,7 @@ module "quarterly_email" {
   source_path = "${path.module}/files/quarterly_email"
 
   environment_variables = {
+    LOGGING_LEVEL = "${var.logging_level}"
     REGION        = "${var.region}"
     SNS_TOPIC_ARN = "${var.sns_topic_arn}"
   }
