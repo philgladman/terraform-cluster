@@ -3,6 +3,9 @@ import logging
 import botocore
 import os
 
+# set up simple logging
+logging.getLogger().setLevel(os.environ['LOGGING_LEVEL'])
+
 # Set Variables
 region = os.environ.get('REGION')
 sns_topic_arn = os.environ.get('SNS_TOPIC_ARN')
@@ -18,19 +21,23 @@ Thanks!
 # Set up connection to AWS SNS
 sns = boto3.client('sns', region_name=region)
 
-
 def lambda_handler(event, context):
     """When triggered, the lambda handler will email the ISSM to audit the Privledged Accounts"""
     try:
         response = sns.publish(
-            TopicArn=sns_topic_arn,
+            TopicArn="jim",
             Message=email_message,
             Subject='TCODE ISSM Quarterly Reminder',
             MessageStructure='string'
         )
-        print("Publishing email to SNS Topic ARN:", sns_topic_arn, "\n")
-        print(response)
+        logging.info(" Publishing email to SNS Topic ARN: %s\n%s", 
+            sns_topic_arn, response
+        )
 
     except botocore.exceptions.ClientError as error:
-        print("ERROR, Cannot publish to SNS Topic ARN:", sns_topic_arn)
-        print(error.response['Error']['Message'])
+        logging.error(
+            " Cannot publish to SNS Topic ARN: %s\n%s", sns_topic_arn,
+                error.response['Error']['Message']
+        )
+
+lambda_handler("test", "test")
