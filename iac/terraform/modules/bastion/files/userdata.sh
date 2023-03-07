@@ -54,8 +54,40 @@ install_cloudwatch_ssm_agent(){
         "files": {
           "collect_list": [
             {
+              "file_path": "/var/log/boot.log*",
+              "log_group_name": "${LOG_GROUP_NAME}",
+              "log_stream_name": "$${INSTANCE_NAME}/{instance_id}/var/log/boot.log*",
+              "timestamp_format": "%H: %M: %S%y%b%-d",
+              "retention_in_days": ${LOG_RETENTION_IN_DAYS}
+            },
+            {
+              "file_path": "/var/log/dmesg",
+              "log_group_name": "${LOG_GROUP_NAME}",
+              "log_stream_name": "$${INSTANCE_NAME}/{instance_id}/var/log/dmesg",
+              "timestamp_format": "%H: %M: %S%y%b%-d"
+            },
+            {
+              "file_path": "/var/log/secure",
+              "log_group_name": "${LOG_GROUP_NAME}",
+              "log_stream_name": "$${INSTANCE_NAME}/{instance_id}/var/log/secure",
+              "timestamp_format": "%H: %M: %S%y%b%-d"
+            },
+            {
               "file_path": "/var/log/messages",
               "log_group_name": "${LOG_GROUP_NAME}",
+              "log_stream_name": "$${INSTANCE_NAME}/{instance_id}/var/log/messages",
+              "timestamp_format": "%H: %M: %S%y%b%-d"
+            },
+            {
+              "file_path": "/var/log/cron*",
+              "log_group_name": "${LOG_GROUP_NAME}",
+              "log_stream_name": "$${INSTANCE_NAME}/{instance_id}/var/log/cron*",
+              "timestamp_format": "%H: %M: %S%y%b%-d"
+            },
+            {
+              "file_path": "/var/log/cloud-init-output.log",
+              "log_group_name": "${LOG_GROUP_NAME}",
+              "log_stream_name": "$${INSTANCE_NAME}/{instance_id}/var/log/cloud-init-output.log",
               "timestamp_format": "%H: %M: %S%y%b%-d"
             }
           ]

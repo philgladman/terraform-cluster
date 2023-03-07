@@ -9,6 +9,7 @@ data "cloudinit_config" "this" {
       MASTER_KEY_SSM_NAME   = var.master_key_ssm_name
       LOG_GROUP_NAME        = var.log_group_name 
       METRICS_NAMESPACE     = var.metrics_namespace
+      LOG_RETENTION_IN_DAYS = var.log_retention_in_days
     })
   }
 }
@@ -58,6 +59,7 @@ data "aws_iam_policy_document" "ssm_access_policy_doc" {
         "ec2:DescribeVolumes",
         "ec2:DescribeTags",
         "logs:PutLogEvents",
+        "logs:PutRetentionPolicy",
         "logs:DescribeLogStreams",
         "logs:DescribeLogGroups",
         "logs:CreateLogStream",

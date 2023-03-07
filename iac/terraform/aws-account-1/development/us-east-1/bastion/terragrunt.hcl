@@ -37,7 +37,6 @@ dependencies {
 inputs = {
   resource_name              = "phil-${local.common.locals.env_name}"
   bastion_ami                = "ami-06640050dc3f556bb"
-  /* bastion_ami                = "ami-06640050dc3f556bb" */
   instance_type              = "t3.micro"
   bastion_subnet_id          = dependency.vpc.outputs.bastion_subnet_id
   master_ssh_key_name        = dependency.master-pem.outputs.master_ssh_key_name
@@ -48,6 +47,7 @@ inputs = {
   region                     = local.region.locals.region
   metrics_namespace          = "CloudWatch-Agent-Metrics"
   log_group_name             = "/aws/ec2/${local.name}/bastion"
+  log_retention_in_days      = "90"
 
   tags = {
     Environment  = "${local.common.locals.env_name}"

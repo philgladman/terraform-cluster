@@ -40,11 +40,13 @@ dependencies {
 } */
 
 inputs = {
-  resource_name  = "phil-${local.common.locals.env_name}"
-  topic_name     = local.alerts.locals.topic_name
-  emails         = local.alerts.locals.emails
-  sns_kms_key_id = local.alerts.locals.sns_kms_key_id
-  trail_name      = local.alerts.locals.trail_name
+  resource_name                      = "phil-${local.common.locals.env_name}"
+  topic_name                         = local.alerts.locals.topic_name
+  emails                             = local.alerts.locals.emails
+  trail_name                         = local.alerts.locals.trail_name
+  team_list                          = local.alerts.locals.team_list
+  development_bastion_log_group_name = local.alerts.locals.development_bastion_log_group_name
+  production_bastion_log_group_name  = local.alerts.locals.production_bastion_log_group_name
 
   tags = {
     Environment  = "${local.common.locals.env_name}"

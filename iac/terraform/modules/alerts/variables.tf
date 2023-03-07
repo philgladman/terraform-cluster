@@ -32,3 +32,18 @@ variable "trail_name" {
   type        = string
   default     = ""
 }
+
+variable "development_bastion_log_group_name" {
+  description = "Development Bastions log group name"
+  type        = string
+}
+
+variable "production_bastion_log_group_name" {
+  description = "Production Bastions log group name"
+  type        = string
+}
+
+variable "team_list" {
+  description = "List of the team that should be allowed to Login to AWS, formatted in a Cloudwatch Metric Filter"
+  type        = string
+}

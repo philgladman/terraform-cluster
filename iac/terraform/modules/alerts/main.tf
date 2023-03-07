@@ -31,21 +31,6 @@ module "s3_key" {
 POLICY
 }
 
-    /* {
-      "Sid": "Allow_Cloudtrail",
-      "Effect": "Allow",
-      "Principal": {
-        "Service":[
-          "cloudtrail.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "kms:DescribeKey",
-        "kms:GenerateDataKey"
-      ],
-      "Resource": "*"
-    } */
-
 resource "random_password" "bucket_name_suffix" {
   length  = 5
   special = false
@@ -113,9 +98,6 @@ resource "aws_s3_bucket_policy" "cloudtrail_s3_bucket_policy" {
 }
 POLICY
 }
-
-
-
 
 resource "aws_s3_bucket_public_access_block" "restrict_s3_bucket" {
   bucket                  = aws_s3_bucket.cloudtrail_s3_bucket.id
@@ -378,36 +360,6 @@ resource "aws_cloudtrail" "alerts_trail" {
 # Create Cloudwatch Alarms & Metrics
 ###
 
-## Without module
-
-/* resource "aws_cloudwatch_log_metric_filter" "console_signon_failure_metric_filter" {
-  name           = "${local.uname}-console-signon-failure"
-  pattern        = "{ ($.eventName = ConsoleLogin) && ($.errorMessage = \"Failed authentication\") }"
-  log_group_name = "${aws_cloudwatch_log_group.alerts_log_group.name}"
-
-  metric_transformation {
-    name      = "${local.uname}-console-signon-failure-counter"
-    namespace = "${local.uname}-cloudtrail-metrics"
-    value     = "1"
-  }
-}
-
-resource "aws_cloudwatch_metric_alarm" "console_signon_failure_alarm" {
-  alarm_name          = "${local.uname}-console-signon-failure"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  evaluation_periods  = "1"
-  metric_name         = "${local.uname}-console-signon-failure-counter"
-  namespace           = "${local.uname}-cloudtrail-metrics"
-  period              = "60"
-  statistic           = "Sum"
-  threshold           = "1"
-  alarm_description   = "Alarms when an unauthenticated API call is made to sign into the console."
-  alarm_actions       = ["${module.sns_topic.sns_topic_arn}"]
-  tags                = var.tags
-} */
-
-## With new custom module 
-
 module "security_group_changes" {
   source  = "./metrics-and-alarms"
 
@@ -570,11 +522,37 @@ module "non_team_signin" {
   source  = "./metrics-and-alarms"
 
   name                            = "${local.uname}-non-team-signin"
-  pattern                         = "{ ($.eventName = ConsoleLogin) && (($.userIdentity.userName != \"phil\") || ($.userIdentity.userName != \"terraform\"))}"
+  pattern                         = "{ ($.eventName = ConsoleLogin) && (${var.team_list})}"
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an someone outside of the Team signs into our AWS Account."
   alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
   metric_transformation_name      = "${local.uname}-non-team-signin-counter"
+  tags                            = var.tags
+}
+
+module "development_failed_ssh_attempt" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-dev-failed-ssh-attempt"
+  pattern                         = "Connection closed by"
+  log_group_name                  = "${var.development_bastion_log_group_name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when someone trys to SSH into the DEVELOPMENT Bastion and fails"
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-dev-failed-ssh-attempt-counter"
+  tags                            = var.tags
+}
+
+module "development_exceed_failed_attempts" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-dev-exceed-failed-ssh-attempts"
+  pattern                         = "maximum authentication attempts exceeded for"
+  log_group_name                  = "${var.development_bastion_log_group_name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when someone exceeds failed SSH log in attempts"
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-dev-exceed-failed-ssh-attempts-counter"
   tags                            = var.tags
 }

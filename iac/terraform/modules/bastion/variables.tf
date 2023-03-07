@@ -57,6 +57,11 @@ variable "log_group_name" {
   default     = ""
 }
 
+variable "log_retention_in_days" {
+  type        = string
+  default     = "30"
+}
+
 variable "metrics_namespace" {
   type        = string
   default     = ""
