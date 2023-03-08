@@ -6,20 +6,37 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 ################################################################################
+# Lambda Layers
+################################################################################
+
+module "jmespath_layer" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  create_layer = true
+
+  layer_name          = "lambda-layer-jmespath"
+  description         = "Lambda layer for python jmespath module"
+  compatible_runtimes = ["python3.9"]
+
+  source_path = "${path.module}/files/layers/jmespath_layer.zip"
+}
+
+################################################################################
 # Lambda to send quarterly Emails
 ################################################################################
 
 module "quarterly_email" {
   source = "terraform-aws-modules/lambda/aws"
 
-  description   = "Lambda Function to go off each quarter to email ISSM"
-  function_name = "${local.uname}-quarterly-email"
-  create_role   = true
-  handler       = "quarterly_email.lambda_handler"
-  runtime       = "python3.9"
-  timeout       = 180
-
-  source_path = "${path.module}/files/quarterly_email"
+  description                       = "Lambda Function to go off each quarter to email ISSM"
+  function_name                     = "${local.uname}-quarterly-email"
+  create_role                       = true
+  handler                           = "quarterly_email.lambda_handler"
+  runtime                           = "python3.9"
+  timeout                           = 180
+  source_path                       = "${path.module}/files/quarterly_email"
+  cloudwatch_logs_retention_in_days = 90
+  cloudwatch_logs_kms_key_id        = var.cloudwatch_kms_key_arn
 
   environment_variables = {
     LOGGING_LEVEL = "${var.logging_level}"
@@ -44,6 +61,17 @@ resource "aws_iam_policy" "allow_sns" {
             "sns:Publish",
           ],
           "Resource" : "${var.sns_topic_arn}"
+        },
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "kms:ReEncrypt*",
+            "kms:GenerateDataKey",
+            "kms:Encrypt",
+            "kms:DescribeKey",
+            "kms:Decrypt"
+          ],
+          "Resource" : "${var.sns_kms_key_arn}"
         }
       ]
   })
@@ -81,20 +109,22 @@ resource "aws_lambda_permission" "allow_quarterly_cron" {
 module "stop_ec2" {
   source = "terraform-aws-modules/lambda/aws"
 
-  description   = "Lambda Function to go off every night to Stop All EC2 Instances"
-  function_name = "${local.uname}-stop-ec2"
-  create_role   = true
-  handler       = "stop_ec2.lambda_handler"
-  runtime       = "python3.9"
-  timeout       = 180
+  description                       = "Lambda Function to go off every night to Stop All EC2 Instances"
+  function_name                     = "${local.uname}-stop-ec2"
+  create_role                       = true
+  handler                           = "stop_ec2.lambda_handler"
+  runtime                           = "python3.9"
+  timeout                           = 180
+  layers                            = [module.jmespath_layer.lambda_layer_arn]
+  cloudwatch_logs_retention_in_days = 90
+  cloudwatch_logs_kms_key_id        = var.cloudwatch_kms_key_arn
 
   source_path = "${path.module}/files/stop_ec2"
 
-  /* environment_variables = {
+  environment_variables = {
     LOGGING_LEVEL = "${var.logging_level}"
     REGION        = "${var.region}"
-    SNS_TOPIC_ARN = "${var.sns_topic_arn}"
-  } */
+  }
 }
 
 # tfsec:ignore:no-policy-wildcards
@@ -137,7 +167,7 @@ resource "aws_cloudwatch_event_target" "stop_ec2_target" {
 }
 
 resource "aws_lambda_permission" "allow_stop_ec2_cron" {
-  statement_id  = "AllowExecutionFromQuartlyCron"
+  statement_id  = "AllowExecutionFromStopEC2Cron"
   action        = "lambda:InvokeFunction"
   function_name = module.stop_ec2.lambda_function_name
   principal     = "events.amazonaws.com"

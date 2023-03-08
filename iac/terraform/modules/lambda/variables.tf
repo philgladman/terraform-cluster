@@ -22,3 +22,14 @@ variable "sns_topic_arn" {
   description = "ARN of SNS Topic to Publish Email"
   type = string
 }
+
+variable "sns_kms_key_arn" {
+  description = "The Key ARN of the KMS Key for the SNS Topic"
+  type        = string
+  default     = ""
+}
+
+variable "cloudwatch_kms_key_arn" {
+  description = "ARN of Cloudwatch KMS Key"
+  type = string
+}

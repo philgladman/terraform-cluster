@@ -32,7 +32,7 @@ def lambda_handler(event, context):
     if instance_ids:
         for instance in instance_ids:
             try:
-                logging.info(" Attempting to stop EC2 Instance: %s\n", instance)
+                logging.info(" Attempting to stop EC2 Instance: %s", instance)
                 response = ec2.stop_instances(InstanceIds=[instance])
                 print(response, "\n")
             except botocore.exceptions.ClientError as error:
@@ -42,5 +42,3 @@ def lambda_handler(event, context):
                 )
     else:
         logging.info(" There are no Running EC2 Instances to stop")
-
-lambda_handler("event", "context")
