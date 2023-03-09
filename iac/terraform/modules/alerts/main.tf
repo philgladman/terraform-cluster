@@ -470,7 +470,7 @@ module "cmk_changes" {
   source  = "./metrics-and-alarms"
 
   name                            = "${local.uname}-cmk-changes"
-  pattern                         = "{ ($.eventSource = kms.amazonaws.com)&&($.eventName = DisableKey)||($.eventName = ScheduleKeyDeletion) }"
+  pattern                         = "{ ($.eventSource = kms.amazonaws.com) && (($.eventName = DisableKey) || ($.eventName = ScheduleKeyDeletion)) }"
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made to schedule the deletion of a CMK, or a CMK is disabled."
@@ -483,7 +483,7 @@ module "user_group_changes" {
   source  = "./metrics-and-alarms"
 
   name                            = "${local.uname}-user-group-changes"
-  pattern                         = "{ ($.eventName=CreateUser)||($.eventName=CreateGroup)||($.eventName=CreateAccessKey)||($.eventName=CreateLoginProfile)||($.eventName=DeleteUser)||($.eventName=DeleteGroup)||($.eventName=DeleteAccessKey)||($.eventName=DeleteLoginProfile) }"
+  pattern                         = "{ ($.eventName=CreateUser) || ($.eventName=CreateGroup) || ($.eventName=CreateAccessKey) || ($.eventName=CreateLoginProfile) || ($.eventName=DeleteUser) || ($.eventName=DeleteGroup) || ($.eventName=DeleteAccessKey) || ($.eventName=DeleteLoginProfile) }"
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made modify, create, or destroy iam user, group, or credentials."
@@ -522,7 +522,7 @@ module "non_team_signin" {
   source  = "./metrics-and-alarms"
 
   name                            = "${local.uname}-non-team-signin"
-  pattern                         = "{ ($.eventName = ConsoleLogin) && (${var.team_list})}"
+  pattern                         = "{ ($.eventName = ConsoleLogin) && (${var.team_list}) }"
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an someone outside of the Team signs into our AWS Account."
@@ -531,7 +531,9 @@ module "non_team_signin" {
   tags                            = var.tags
 }
 
-module "development_failed_ssh_attempt" {
+#### NEW Alarms
+
+module "dev_failed_ssh_attempt" {
   source  = "./metrics-and-alarms"
 
   name                            = "${local.uname}-dev-failed-ssh-attempt"
@@ -544,15 +546,119 @@ module "development_failed_ssh_attempt" {
   tags                            = var.tags
 }
 
-module "development_exceed_failed_attempts" {
+module "dev_exceed_failed_attempts" {
   source  = "./metrics-and-alarms"
 
   name                            = "${local.uname}-dev-exceed-failed-ssh-attempts"
   pattern                         = "maximum authentication attempts exceeded for"
   log_group_name                  = "${var.development_bastion_log_group_name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
-  alarm_description               = "Alarms when someone exceeds failed SSH log in attempts"
+  alarm_description               = "Alarms when the maxium failed SSH attempts have been exceeded for the DEVELOPMENT Bastion"
   alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
   metric_transformation_name      = "${local.uname}-dev-exceed-failed-ssh-attempts-counter"
+  tags                            = var.tags
+}
+
+/* module "ops_p_failed_ssh_attempt" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-ops-p-failed-ssh-attempt"
+  pattern                         = "Connection closed by"
+  log_group_name                  = "${var.ops_p_bastion_log_group_name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when someone trys to SSH into the OPS-P Bastion and fails"
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-ops-p-failed-ssh-attempt-counter"
+  tags                            = var.tags
+}
+
+module "ops_p_exceed_failed_attempts" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-ops-p-exceed-failed-ssh-attempts"
+  pattern                         = "maximum authentication attempts exceeded for"
+  log_group_name                  = "${var.ops_p_bastion_log_group_name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when the maxium failed SSH attempts have been exceeded for the OPS-P Bastion"
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-ops-p-exceed-failed-ssh-attempts-counter"
+  tags                            = var.tags
+} */
+
+module "delete_rds" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-delete-rds"
+  pattern                         = "{ ($.eventSource = rds.amazonaws.com) && (($.eventName = DeleteDB) || ($.eventName = DeleteDBInstance) || ($.eventName = DeleteDBCluster)) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API Call is made to DELETE a RDS Database"
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-delete-rds-counter"
+  tags                            = var.tags
+}
+
+module "delete_s3" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-delete-s3"
+  pattern                         = "{ ($.eventSource = s3.amazonaws.com) && ($.eventName = DeleteBucket) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API Call is made to DELETE a S3 Bucket"
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-delete-s3-counter"
+  tags                            = var.tags
+}
+
+module "vpc_changes" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-vpc-changes"
+  pattern                         = "{ ($.eventSource = ec2.amazonaws.com) && (($.eventName = CreateVpc*) || ($.eventName = DeleteVpc*) || ($.eventName = ModifyVpc*) || ($.eventName = AssociateVpc*) || ($.eventName = DisassociateVpc*)) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API Call is made to Create/Update/Delete VPC"
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-vpc-changes-counter"
+  tags                            = var.tags
+}
+
+module "subnet_changes" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-subnet-changes"
+  pattern                         = "{ ($.eventSource = ec2.amazonaws.com) && (($.eventName = CreateSubnet*) || ($.eventName = DeleteSubnet*) || ($.eventName = ModifySubnet*) || ($.eventName = AssociateSubnet*) || ($.eventName = DisassociateSubnet*)) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API Call is made to Create/Update/Delete Subnet"
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-subnet-changes-counter"
+  tags                            = var.tags
+}
+
+module "delete_ssm" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-delete-ssm"
+  pattern                         = "{ ($.eventSource = ssm.amazonaws.com) && ($.eventName = DeleteParameter*) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API Call is made to DELETE a SSM Parameter"
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-delete-ssm-counter"
+  tags                            = var.tags
+}
+
+module "delete_secret" {
+  source  = "./metrics-and-alarms"
+
+  name                            = "${local.uname}-delete-secret"
+  pattern                         = "{ ($.eventSource = secretsmanager.amazonaws.com) && ($.eventName = DeleteSecret) }"
+  log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
+  metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
+  alarm_description               = "Alarms when an API Call is made to DELETE a Secret from Secrets Manager"
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  metric_transformation_name      = "${local.uname}-delete-secret-counter"
   tags                            = var.tags
 }
