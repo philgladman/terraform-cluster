@@ -66,3 +66,8 @@ variable "metrics_namespace" {
   type        = string
   default     = ""
 }
+
+variable "sns_topic_arn" {
+  type        = string
+  default     = ""
+}

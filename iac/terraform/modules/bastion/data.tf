@@ -10,6 +10,7 @@ data "cloudinit_config" "this" {
       LOG_GROUP_NAME        = var.log_group_name 
       METRICS_NAMESPACE     = var.metrics_namespace
       LOG_RETENTION_IN_DAYS = var.log_retention_in_days
+      SNS_TOPIC_ARN         = var.sns_topic_arn
     })
   }
 }
@@ -55,6 +56,7 @@ data "aws_iam_policy_document" "ssm_access_policy_doc" {
     effect  = "Allow"
     actions = [
         "cloudwatch:PutMetricData",
+        "cloudwatch:PutMetricAlarm",
         "ec2:DescribeInstances",
         "ec2:DescribeVolumes",
         "ec2:DescribeTags",
