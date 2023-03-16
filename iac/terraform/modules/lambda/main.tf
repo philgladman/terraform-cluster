@@ -173,3 +173,75 @@ resource "aws_lambda_permission" "allow_stop_ec2_cron" {
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.stop_ec2.arn
 }
+
+################################################################################
+# Lambda to delete old unused EBS Alarms
+################################################################################
+
+module "ebs_alarm_cleanup" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  description                       = "Lambda Function to go off every night to Delete all old and unused EBS Alarms"
+  function_name                     = "${local.uname}-ebs-alarm-cleanup"
+  create_role                       = true
+  handler                           = "ebs_alarm_cleanup.lambda_handler"
+  runtime                           = "python3.9"
+  timeout                           = 180
+  layers                            = [module.jmespath_layer.lambda_layer_arn]
+  cloudwatch_logs_retention_in_days = 90
+  cloudwatch_logs_kms_key_id        = var.cloudwatch_kms_key_arn
+
+  source_path = "${path.module}/files/ebs_alarm_cleanup"
+
+  environment_variables = {
+    LOGGING_LEVEL = "${var.logging_level}"
+    REGION        = "${var.region}"
+  }
+}
+
+# tfsec:ignore:no-policy-wildcards
+resource "aws_iam_policy" "allow_ebs_alarm_cleanup" {
+
+  name        = "${local.uname}-allow-ebs-alarm-cleanup"
+  path        = "/"
+  description = "AWS IAM Policy for lambda Delete Cloudwatch Alarms"
+  policy = jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "cloudwatch:DeleteAlarms",
+            "cloudwatch:DescribeAlarms",
+          ],
+          "Resource" : "*"
+        }
+      ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_ebs_alarm_cleanup_role" {
+  role       = module.ebs_alarm_cleanup.lambda_role_name       
+  policy_arn = aws_iam_policy.allow_ebs_alarm_cleanup.arn
+}
+
+resource "aws_cloudwatch_event_rule" "ebs_alarm_cleanup" {
+  name                = "${local.uname}-ebs-alarm-cleanup"
+  description         = "Cronjob to go off every Monday and Thursday at 10:00am EST"
+  schedule_expression = "cron(0 14 ? * 2,5 *)"
+  event_bus_name      = "default"
+}
+
+resource "aws_cloudwatch_event_target" "ebs_alarm_cleanup_target" {
+  arn  = module.ebs_alarm_cleanup.lambda_function_arn
+  rule = aws_cloudwatch_event_rule.ebs_alarm_cleanup.name
+}
+
+resource "aws_lambda_permission" "allow_ebs_alarm_cleanup_cron" {
+  statement_id  = "AllowExecutionFromEbsAlarmCleanupCron"
+  action        = "lambda:InvokeFunction"
+  function_name = module.ebs_alarm_cleanup.lambda_function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.ebs_alarm_cleanup.arn
+}

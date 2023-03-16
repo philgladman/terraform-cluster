@@ -57,6 +57,8 @@ data "aws_iam_policy_document" "ssm_access_policy_doc" {
     actions = [
         "cloudwatch:PutMetricData",
         "cloudwatch:PutMetricAlarm",
+        "cloudwatch:DeleteAlarms",
+        "cloudwatch:DescribeAlarms",
         "ec2:DescribeInstances",
         "ec2:DescribeVolumes",
         "ec2:DescribeTags",
