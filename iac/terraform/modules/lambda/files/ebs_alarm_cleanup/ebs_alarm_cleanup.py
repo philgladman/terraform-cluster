@@ -10,7 +10,7 @@ logging.getLogger().setLevel(os.environ['LOGGING_LEVEL'])
 # Set Variables
 region = os.environ.get('REGION')
 
-# Set up connection to AWS SNS
+# Set up connection to AWS Cloudwatch
 cloudwatch = boto3.client('cloudwatch', region_name=region)
 
 response = cloudwatch.describe_alarms()

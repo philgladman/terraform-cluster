@@ -181,7 +181,7 @@ resource "aws_lambda_permission" "allow_stop_ec2_cron" {
 module "ebs_alarm_cleanup" {
   source = "terraform-aws-modules/lambda/aws"
 
-  description                       = "Lambda Function to go off every night to Delete all old and unused EBS Alarms"
+  description                       = "Lambda Function to go off every Monday and Thursday to Delete all old and unused EBS Alarms"
   function_name                     = "${local.uname}-ebs-alarm-cleanup"
   create_role                       = true
   handler                           = "ebs_alarm_cleanup.lambda_handler"
