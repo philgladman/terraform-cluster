@@ -32,7 +32,10 @@ data "aws_iam_policy_document" "kms_access_policy_doc" {
     sid       = "EnableKMSIAMUserPermissions"
     effect    = "Allow"
     actions   = ["kms:*"]
-    resources = ["${var.ebs_kms_key_arn}"]
+    resources = [
+      "${var.ebs_kms_key_arn}",
+      "arn:aws:kms:us-east-1:567243246807:key/a993d3be-913f-4a76-be2e-c5294b39a7b5"
+      ]
   }
 }
 
@@ -40,7 +43,10 @@ data "aws_iam_policy_document" "s3_access_policy_doc" {
   version = "2012-10-17"
   statement {
     effect  = "Allow"
-    actions = ["s3:GetObject"]
+    actions = [
+      "s3:GetObject",
+      "s3:List*"
+    ]
     resources = ["*"]
   }
 }
@@ -62,6 +68,7 @@ data "aws_iam_policy_document" "ssm_access_policy_doc" {
         "ec2:DescribeInstances",
         "ec2:DescribeVolumes",
         "ec2:DescribeTags",
+        "ec2:DescribePrefixLists",
         "logs:PutLogEvents",
         "logs:PutRetentionPolicy",
         "logs:DescribeLogStreams",
@@ -69,6 +76,25 @@ data "aws_iam_policy_document" "ssm_access_policy_doc" {
         "logs:CreateLogStream",
         "logs:CreateLogGroup"
         ]
+    resources = ["*"]
+  }
+  statement {
+    effect  = "Deny"
+    actions = [
+        "s3:*",
+        "ec2:*",
+        "kms:*"
+        ]
+    condition {
+      test = "StringNotEquals"
+      variable = "aws:SourceVpc"
+      values = ["$${aws:Ec2InstanceSourceVpc}"]
+    }
+    condition {
+      test = "BoolIfExists"
+      variable = "aws:ViaAWSService"
+      values = ["false"]
+    }
     resources = ["*"]
   }
 }

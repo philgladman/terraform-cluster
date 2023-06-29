@@ -1,9 +1,9 @@
 
 locals {
-  common        = read_terragrunt_config(find_in_parent_folders("common.hcl"))
-  region        = read_terragrunt_config(find_in_parent_folders("region.hcl"))
-  rke2          = read_terragrunt_config(find_in_parent_folders("rke2.hcl"))
-  sns         = read_terragrunt_config(find_in_parent_folders("sns.hcl"))
+  common = read_terragrunt_config(find_in_parent_folders("common.hcl"))
+  region = read_terragrunt_config(find_in_parent_folders("region.hcl"))
+  rke2   = read_terragrunt_config(find_in_parent_folders("rke2.hcl"))
+  sns    = read_terragrunt_config(find_in_parent_folders("sns.hcl"))
 
 }
 

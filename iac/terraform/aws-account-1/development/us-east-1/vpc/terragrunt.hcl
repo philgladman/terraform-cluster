@@ -1,8 +1,8 @@
 locals {
-  common        = read_terragrunt_config(find_in_parent_folders("common.hcl"))
-  region        = read_terragrunt_config(find_in_parent_folders("region.hcl"))
+  common = read_terragrunt_config(find_in_parent_folders("common.hcl"))
+  region = read_terragrunt_config(find_in_parent_folders("region.hcl"))
+  vpc    = read_terragrunt_config(find_in_parent_folders("vpc.hcl"))
 }
-
 
 include {
   path = find_in_parent_folders()
@@ -13,7 +13,9 @@ terraform {
 }
 
 inputs = {
-  resource_name  = "phil-${local.common.locals.env_name}"
+  resource_name = "phil-${local.common.locals.env_name}"
+  cidr          = local.vpc.locals.cidr
+  endpoints     = local.vpc.locals.endpoints
 
   tags = {
     Environment  = "${local.common.locals.env_name}"
