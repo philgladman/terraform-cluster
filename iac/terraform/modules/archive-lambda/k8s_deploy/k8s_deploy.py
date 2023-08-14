@@ -29,7 +29,7 @@ def lambda_handler(event, context):
     # Run command 1 on the bastion and output response
     github_username = get_github_username()
     github_pat = get_github_pat()
-    github_command = "git clone --branch phil-lambda https://" + github_username + ":" + github_pat + "@github.com/raft-tech/tcode.git /tmp/tcode"
+    github_command = "git clone --branch phil-lambda https://" + github_username + ":" + github_pat + "@github.com/philgladman/test.git /tmp/test"
     stdin, stdout, stderr = ssh.exec_command(github_command)
     #stdin, stdout, stderr = ssh.exec_command('/bin/sh -c "echo ' + github_command + '"')
     outlines = stdout.readlines()
@@ -59,14 +59,14 @@ def lambda_handler(event, context):
     print("end of command 4")
 
     # Run command 5 on the bastion and output response
-    stdin, stdout, stderr = ssh.exec_command('cat /tmp/tcode/k8s/deploy.sh')
+    stdin, stdout, stderr = ssh.exec_command('cat /tmp/test/k8s/deploy.sh')
     outlines = stdout.readlines()
     resp = ''.join(outlines)
     print(resp)
     print("end of command 5")
 
     # Run command 6 on the bastion and output response
-    stdin, stdout, stderr = ssh.exec_command('rm -rf /tmp/tcode')
+    stdin, stdout, stderr = ssh.exec_command('rm -rf /tmp/test')
     outlines = stdout.readlines()
     resp = ''.join(outlines)
     print(resp)

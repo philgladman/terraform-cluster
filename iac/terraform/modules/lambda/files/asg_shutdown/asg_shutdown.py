@@ -15,7 +15,7 @@
 #     """When triggered, the lambda handler will grab a list of autoscaling groups and set the desired capacity to 0"""
 #     asg_list = get_asg_list(asg_response)
 #     for g in range(len(asg_list)):
-#         if asg_list[g] == "raft-tcode-il2-mgmt-bastion-asg" or asg_list[g] == "raft-tcode-il2-sbx-bastion-asg" or "eks" in asg_list[g]:
+#         if asg_list[g] == "phil-il2-mgmt-bastion-asg" or asg_list[g] == "phil-il2-sbx-bastion-asg" or "eks" in asg_list[g]:
 #             continue
 #         else:
 #             try:

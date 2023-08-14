@@ -12,7 +12,7 @@ sns_topic_arn = os.environ.get('SNS_TOPIC_ARN')
 email_message="""
 Good morning, 
     
-This email is for the TCODE ISSM. This is your Quarterly Reminder to audit the TCODE AWS Privledged accounts. Please contact the TCODE Team Lead for any questions.
+This email is for the USER. This is your Quarterly Reminder to audit the AWS Privledged accounts. Please contact the Team Lead for any questions.
 
     
 Thanks!
@@ -27,7 +27,7 @@ def lambda_handler(event, context):
         response = sns.publish(
             TopicArn=sns_topic_arn,
             Message=email_message,
-            Subject='TCODE ISSM Quarterly Reminder',
+            Subject='ISSM Quarterly Reminder',
             MessageStructure='string'
         )
         logging.info(" Publishing email to SNS Topic ARN: %s\n%s", 

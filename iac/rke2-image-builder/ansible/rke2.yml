@@ -24,39 +24,11 @@
     # Update OS
     - update
 
-    # BigBang/Partybus/tcode Specific Reqs
+    # BigBang Specific Reqs
     #- bigbang
 
     # Finalize system preparation and cleanup before baking
-    #- sysprep
+    # - sysprep
 
     # Configure additional EBS volume and CIS-Compliant Partitions
-    #- lvm
-   
-   
-
-
-##### working code template
-#    # Perform kubernetes specific configuration
-#    - common
-#
-#    # Perform rke2 specific configuration
-#    - rke2
-#
-#    # Perform gpu specific configuration, when required
-#    - { role: gpu, when: gpu_reqd }
-#
-#    # Perform aws specific configuration
-#    - aws
-#
-#    # Perform OS hardening, currently only supports STIGs
-#    - hardening
-#
-#    # BigBang/Partybus/tcode Specific Reqs
-#    - bigbang
-#
-#    # Finalize system preparation and cleanup before baking
-#    - sysprep
-#
-#    # Configure additional EBS volume and CIS-Compliant Partitions
-#    - lvm
+    # - lvm

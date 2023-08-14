@@ -245,3 +245,121 @@ resource "aws_lambda_permission" "allow_ebs_alarm_cleanup_cron" {
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.ebs_alarm_cleanup.arn
 }
+
+################################################################################
+# Lambda to send an email alert when non team member signs into AWS Account
+################################################################################
+/* 
+module "nonteam_signin_alarm" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  description                       = "Lambda Function send an email alert when non team member signs into AWS Account"
+  function_name                     = "${local.uname}-nonteam-signin-alarm"
+  create_role                       = true
+  handler                           = "nonteam_signin_alarm.lambda_handler"
+  runtime                           = "python3.9"
+  timeout                           = 180
+
+  cloudwatch_logs_retention_in_days = 365
+  cloudwatch_logs_kms_key_id        = var.cloudwatch_kms_key_arn
+
+  source_path = "${path.module}/files/nonteam_signin_alarm"
+
+  vpc_subnet_ids         = var.vpc_subnet_ids
+  vpc_security_group_ids = [aws_security_group.lambda_sg.id]
+
+  environment_variables = {
+    LOGGING_LEVEL        = "${var.logging_level}"
+    REGION               = "${var.region}"
+    SNS_TOPIC_ARN        = "${var.sns_topic_arn}"
+    AUTHORIZED_TEAM_LIST = "${var.authorized_team_list}"
+  }
+}
+
+# tfsec:ignore:no-policy-wildcards
+resource "aws_iam_policy" "nonteam_signin_alarm" {
+
+  name        = "${local.uname}-nonteam-signin-alarm"
+  path        = "/"
+  description = "AWS IAM Policy for lambda to send emails via sns and to query cloudtrail"
+  policy = jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "sns:Publish",
+          ],
+          "Resource" : "${var.sns_topic_arn}"
+        },
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "kms:ReEncrypt*",
+            "kms:GenerateDataKey",
+            "kms:Encrypt",
+            "kms:DescribeKey",
+            "kms:Decrypt"
+          ],
+          "Resource" : "${var.sns_kms_key_arn}"
+        },
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "cloudtrail:LookupEvents",
+          ],
+          "Resource" : "*"
+        },
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "ec2:CreateNetworkInterface",
+            "ec2:DescribeNetworkInterfaces",
+            "ec2:DeleteNetworkInterface",
+            "ec2:AssignPrivateIpAddresses",
+            "ec2:UnassignPrivateIpAddresses"
+          ],
+          "Resource" : "*"
+        }
+      ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_nonteam_signin_alarm_role" {
+  role       = module.nonteam_signin_alarm.lambda_role_name       
+  policy_arn = aws_iam_policy.nonteam_signin_alarm.arn
+}
+
+resource "aws_cloudwatch_event_rule" "nonteam_signin_alarm_rule" {
+  name                = "${local.uname}-nonteam-signin-alarm-rule"
+  description         = "This rule is used to trigger the nonteam-signin-alarm lambda function"
+  event_pattern       = jsonencode({
+    "source": ["aws.cloudwatch"],
+    "detail-type": ["CloudWatch Alarm State Change"],
+    "resources": ["arn:aws-us-gov:cloudwatch:${var.region}:${data.aws_caller_identity.current.id}:alarm:${local.uname}-non-team-signin"],
+    "detail": {
+      "alarmName": ["${local.uname}-non-team-signin"],
+      "previousState": {
+        "value": ["INSUFFICIENT_DATA", "OK"]
+      },
+      "state": {
+        "value": ["ALARM"]
+      }
+    }
+  })
+  event_bus_name      = "default"
+}
+
+resource "aws_cloudwatch_event_target" "nonteam_signin_alarm_target" {
+  arn  = module.nonteam_signin_alarm.lambda_function_arn
+  rule = aws_cloudwatch_event_rule.nonteam_signin_alarm_rule.name
+}
+
+resource "aws_lambda_permission" "allow_nonteam_signin_alarm_rule" {
+  statement_id  = "AllowExecutionFromNonteamSigningAlarm"
+  action        = "lambda:InvokeFunction"
+  function_name = module.nonteam_signin_alarm.lambda_function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.nonteam_signin_alarm_rule.arn
+} */
