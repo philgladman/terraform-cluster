@@ -10,10 +10,10 @@ remote_state {
     if_exists = "overwrite"
   }
   config = {
-    bucket         = "phil-clemson-${local.aws_region}-tfstate-backend"
+    bucket         = "phil-account-2-${local.aws_region}-tfstate-backend"
     key            = format("%s/terraform.tfstate", path_relative_to_include())
     region         = local.aws_region
     encrypt        = true
-    dynamodb_table = "phil-${local.aws_region}-test-tf-locks-gus-sully"
+    dynamodb_table = "phil-account-2-${local.aws_region}-table"
   }
 }
