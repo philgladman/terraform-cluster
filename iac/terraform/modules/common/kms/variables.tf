@@ -21,6 +21,23 @@ variable "key_usage" {
   default = "ENCRYPT_DECRYPT"
 }
 
+variable "create_key" {
+  type = bool
+  default = true
+}
+
+variable "attach_policy" {
+  description = "Controls if KMS key should have policy attached (set to `true` to use value of `policy` as kms policy)"
+  type        = bool
+  default     = false
+}
+
+variable "policy" {
+  description = "(Optional) A valid KMS policy JSON document. Note that if the policy document is not specific enough (but still valid), Terraform may view the policy as constantly changing in a terraform plan. In this case, please make sure you use the verbose/specific version of the policy. For more information about building AWS IAM policy documents with Terraform, see the AWS IAM Policy Document Guide."
+  type        = string
+  default     = null
+}
+
 variable "deletion_window_in_days" {
   type = string
   default = 7
