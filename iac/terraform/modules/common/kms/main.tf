@@ -29,11 +29,10 @@ data "aws_iam_policy_document" "combined" {
   count = var.create_key && local.attach_policy ? 1 : 0
 
   source_policy_documents = compact([
-    # var.attach_sns_kms_policy ? data.aws_iam_policy_document.sns_kms_policy[0].json : "",
+    var.attach_iam_kms_policy  ? data.aws_iam_policy_document.iam_kms_policy[0].json : "",
+    var.attach_sns_kms_policy ? data.aws_iam_policy_document.sns_kms_policy[0].json : "",
     # var.attach_cloudtrail_kms_policy ? data.aws_iam_policy_document.cloudtrail_kms_policy[0].json : "",
     # var.attach_cloudwatch_kms_policy ? data.aws_iam_policy_document.cloudwatch_kms_policy[0].json : "",
-    # var.attach_s3_kms_policy  ? data.aws_iam_policy_document.s3_kms_policy[0].json : "",
-    var.attach_iam_kms_policy  ? data.aws_iam_policy_document.iam_kms_policy[0].json : "",
     var.attach_policy ? var.kms_policy : ""
   ])
 }
@@ -44,19 +43,31 @@ data "aws_iam_policy_document" "iam_kms_policy" {
   
   statement {
     sid = "Enable IAM User Permissions"
-
     principals {
-      type = "AWS"
+      type        = "AWS"
       identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
-
-    effect = "Allow"
-
-    actions = [
-      "kms:*",
-    ]
-
+    effect    = "Allow"
+    actions   = ["kms:*"]
     resources = ["*"]
+  }
+}
 
+# KMS Policy for SNS Perms
+data "aws_iam_policy_document" "sns_kms_policy" {
+  count = var.create_key && var.attach_sns_kms_policy ? 1 : 0
+  
+  statement {
+    sid = "Allow Cloudwatch to use key"
+    principals {
+      type = "Service"
+      identifiers = ["cloudwatch.amazonaws.com"]
+    }
+    effect    = "Allow"
+    actions   = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey*",
+    ]
+    resources = ["*"]
   }
 }
