@@ -3,13 +3,13 @@ variable "resource_name" {
   default = ""
 }
 
-variable "key_name" {
-  description = "Alias of the key"
-  type = string
-}
-
 variable "tags" {
   type = map(string)
+}
+
+variable "create_key" {
+  type = bool
+  default = true
 }
 
 variable "description" {
@@ -39,6 +39,10 @@ variable "enable_key_rotation" {
 variable "multi_region" {
   type = bool
   default = false
+}
+
+variable "key_alias" {
+  type = string
 }
 
 variable "kms_policy" {
