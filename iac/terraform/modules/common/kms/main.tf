@@ -32,7 +32,7 @@ data "aws_iam_policy_document" "combined" {
     var.attach_iam_kms_policy  ? data.aws_iam_policy_document.iam_kms_policy[0].json : "",
     var.attach_sns_kms_policy ? data.aws_iam_policy_document.sns_kms_policy[0].json : "",
     var.attach_cloudwatch_kms_policy ? data.aws_iam_policy_document.cloudwatch_kms_policy[0].json : "",
-    # var.attach_cloudtrail_kms_policy ? data.aws_iam_policy_document.cloudtrail_kms_policy[0].json : "",
+    var.attach_cloudtrail_kms_policy ? data.aws_iam_policy_document.cloudtrail_kms_policy[0].json : "",
     var.attach_policy ? var.kms_policy : ""
   ])
 }
@@ -95,6 +95,32 @@ data "aws_iam_policy_document" "cloudwatch_kms_policy" {
       test     = "ArnLike"
       variable = "kms:EncryptionContext:aws:logs:arn"
       values   = ["arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:*"]
+    }
+  }
+}
+
+# KMS Policy for cloudtrail Perms
+data "aws_iam_policy_document" "cloudtrail_kms_policy" {
+  count = var.create_key && var.attach_cloudtrail_kms_policy ? 1 : 0
+  
+  statement {
+    sid = "Allow CloudTrail to encrypt logs"
+    principals {
+      type = "Service"
+      identifiers = ["cloudtrail.amazonaws.com"]
+    }
+    effect    = "Allow"
+    actions   = ["kms:GenerateDataKey*"]
+    resources = ["*"]
+    condition {
+      test     = "ArnLike"
+      variable = "kms:EncryptionContext:aws:cloudtrail:arn"
+      values   = ["arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"]
+    }
+    condition {
+      test     = "ArnLike"
+      variable = "AWS:SourceArn"
+      values   = ["arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"]
     }
   }
 }
