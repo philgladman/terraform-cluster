@@ -21,7 +21,7 @@ resource "aws_kms_key" "kms_key" {
 
 resource "aws_kms_alias" "kms_alias" {
   count         = var.create_key ? 1 : 0
-  name          = "${var.key_name}-test-1"
+  name          = var.key_name
   target_key_id = aws_kms_key.kms_key[0].key_id
 }
 
