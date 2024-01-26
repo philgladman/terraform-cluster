@@ -13,6 +13,7 @@ module "kms" {
   is_enabled              = var.is_enabled
   enable_key_rotation     = var.enable_key_rotation
   multi_region            = var.multi_region
+  attach_policy           = var.attach_policy
   kms_policy              = var.kms_policy
   tags                    = var.tags
 

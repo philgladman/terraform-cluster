@@ -9,8 +9,8 @@ locals {
 module "s3_key" {
   source  = "../common/kms"
 
-  kms_description = "s3 kms key"
-  kms_alias       = "${local.uname}-s3-key"
+  description = "s3 kms key"
+  key_name        = "alias/${local.uname}-s3-key"
   tags            = var.tags
   kms_policy      = <<POLICY
 {
@@ -114,8 +114,8 @@ resource "aws_s3_bucket_public_access_block" "restrict_s3_bucket" {
 module "sns_key" {
   source  = "../common/kms"
 
-  kms_description = "sns kms key"
-  kms_alias       = "${local.uname}-sns-key"
+  description = "sns kms key"
+  key_name        = "alias/${local.uname}-sns-key"
   tags            = var.tags
   kms_policy      = <<POLICY
 {
@@ -177,8 +177,8 @@ resource "aws_sns_topic_subscription" "sns_topic_subscription" {
 module "cloudwatch_key" {
   source  = "../common/kms"
 
-  kms_description = "cloudwatch kms key"
-  kms_alias       = "${local.uname}-cloudwatch-key"
+  description = "cloudwatch kms key"
+  key_name        = "alias/${local.uname}-cloudwatch-key"
   tags            = var.tags
   kms_policy      = <<POLICY
 {
@@ -226,8 +226,8 @@ POLICY
 module "cloudtrail_key" {
   source  = "../common/kms"
 
-  kms_description = "cloudtrail kms key"
-  kms_alias       = "${local.uname}-cloudtrail-key"
+  description = "cloudtrail kms key"
+  key_name        = "alias/${local.uname}-cloudtrail-key"
   tags            = var.tags
   kms_policy      = <<POLICY
 {

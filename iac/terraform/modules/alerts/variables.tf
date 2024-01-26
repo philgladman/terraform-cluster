@@ -47,3 +47,15 @@ variable "team_list" {
   description = "List of the team that should be allowed to Login to AWS, formatted in a Cloudwatch Metric Filter"
   type        = string
 }
+
+variable "kms_key_arn" {
+  description = "The ARN for the KMS Key to use"
+  type        = string
+  default     = ""
+}
+
+variable "kms_key_id" {
+  description = "The ID for the KMS Key to use"
+  type        = string
+  default     = ""
+}

@@ -13,31 +13,16 @@ terraform {
   source = "../../../..//modules/alerts/"
 }
 
-/* dependency "vpc" {
-  config_path = "../vpc"
-}
-
-dependency "master-pem" {
-  config_path = "../master-pem"
-}
-
-dependency "sops" {
-  config_path = "../sops"
-}
-
-dependency "bastion" {
-  config_path = "../bastion"
+dependency "kms" {
+  config_path = "../kms"
 }
 
 # enumerate all the Terragrunt modules that need to be applied in order for this module to be able to apply
 dependencies {
   paths = [
-    "..//vpc",
-    "..//master-pem",
-    "..//sops",
-    "..//bastion"
+    "..//kms"
   ]
-} */
+}
 
 inputs = {
   resource_name                      = "phil-${local.common.locals.env_name}"
@@ -47,6 +32,8 @@ inputs = {
   team_list                          = local.alerts.locals.team_list
   development_bastion_log_group_name = local.alerts.locals.development_bastion_log_group_name
   production_bastion_log_group_name  = local.alerts.locals.production_bastion_log_group_name
+  kms_key_arn                        = dependency.kms.outputs.kms_key_arn
+  kms_key_id                         = dependency.kms.outputs.kms_key_id
 
   tags = {
     Environment  = "${local.common.locals.env_name}"
