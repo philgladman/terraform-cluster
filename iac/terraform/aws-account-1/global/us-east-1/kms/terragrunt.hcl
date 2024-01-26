@@ -18,8 +18,12 @@ inputs = {
   create_key    = true
   key_alias     = "general-key"
   description   = "KMS key to be used for all services"
-  kms_policy    = ""
 
+  attach_sns_kms_policy        = true
+  attach_cloudtrail_kms_policy = true
+  attach_cloudwatch_kms_policy = true
+  attach_s3_kms_policy         = true
+  attach_iam_kms_policy        = true
 
   tags = {
     Environment  = "${local.common.locals.env_name}"

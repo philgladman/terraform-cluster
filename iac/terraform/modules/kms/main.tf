@@ -20,4 +20,5 @@ module "kms" {
   attach_cloudtrail_kms_policy = var.attach_cloudtrail_kms_policy
   attach_cloudwatch_kms_policy = var.attach_cloudwatch_kms_policy
   attach_s3_kms_policy         = var.attach_s3_kms_policy
+  attach_iam_kms_policy        = var.attach_iam_kms_policy
 }

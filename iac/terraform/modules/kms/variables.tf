@@ -63,13 +63,19 @@ variable "attach_cloudtrail_kms_policy" {
 }
 
 variable "attach_cloudwatch_kms_policy" {
-  description = "Controls if KMS Policy for SNS should be created and attached to Key"
+  description = "Controls if KMS Policy for Cloudwatch should be created and attached to Key"
   type        = bool
   default     = true
 }
 
 variable "attach_s3_kms_policy" {
-  description = "Controls if KMS Policy for SNS should be created and attached to Key"
+  description = "Controls if KMS Policy for S3 should be created and attached to Key"
+  type        = bool
+  default     = true
+}
+
+variable "attach_iam_kms_policy" {
+  description = "Controls if KMS Policy for IAM should be created and attached to Key"
   type        = bool
   default     = true
 }
