@@ -31,8 +31,8 @@ data "aws_iam_policy_document" "combined" {
   source_policy_documents = compact([
     var.attach_iam_kms_policy  ? data.aws_iam_policy_document.iam_kms_policy[0].json : "",
     var.attach_sns_kms_policy ? data.aws_iam_policy_document.sns_kms_policy[0].json : "",
+    var.attach_cloudwatch_kms_policy ? data.aws_iam_policy_document.cloudwatch_kms_policy[0].json : "",
     # var.attach_cloudtrail_kms_policy ? data.aws_iam_policy_document.cloudtrail_kms_policy[0].json : "",
-    # var.attach_cloudwatch_kms_policy ? data.aws_iam_policy_document.cloudwatch_kms_policy[0].json : "",
     var.attach_policy ? var.kms_policy : ""
   ])
 }
@@ -58,7 +58,7 @@ data "aws_iam_policy_document" "sns_kms_policy" {
   count = var.create_key && var.attach_sns_kms_policy ? 1 : 0
   
   statement {
-    sid = "Allow Cloudwatch to use key"
+    sid = "Allow Cloudwatch to use key for SNS"
     principals {
       type = "Service"
       identifiers = ["cloudwatch.amazonaws.com"]
@@ -69,5 +69,32 @@ data "aws_iam_policy_document" "sns_kms_policy" {
       "kms:GenerateDataKey*",
     ]
     resources = ["*"]
+  }
+}
+
+# KMS Policy for Cloudwatch Perms
+data "aws_iam_policy_document" "cloudwatch_kms_policy" {
+  count = var.create_key && var.attach_cloudwatch_kms_policy ? 1 : 0
+  
+  statement {
+    sid = "Allow Cloudwatch to use key"
+    principals {
+      type = "Service"
+      identifiers = ["logs.${data.aws_region.current.name}.amazonaws.com"]
+    }
+    effect    = "Allow"
+    actions   = [
+      "kms:Encrypt*",
+      "kms:Decrypt*",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:Describe*"
+    ]
+    resources = ["*"]
+    condition {
+      test     = "ArnLike"
+      variable = "kms:EncryptionContext:aws:logs:arn"
+      values   = ["arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:*"]
+    }
   }
 }
