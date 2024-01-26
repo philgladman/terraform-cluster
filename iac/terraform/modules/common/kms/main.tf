@@ -1,6 +1,6 @@
 locals {
   uname         = lower(var.resource_name)
-  attach_policy = var.attach_sns_kms_policy || var.attach_cloudtrail_kms_policy || var.attach_cloudwatch_kms_policy || var.attach_s3_kms_policy || var.attach_policy
+  attach_policy = var.attach_sns_kms_policy || var.attach_cloudtrail_kms_policy || var.attach_cloudwatch_kms_policy || var.attach_policy
 }
 
 data "aws_caller_identity" "current" {}
