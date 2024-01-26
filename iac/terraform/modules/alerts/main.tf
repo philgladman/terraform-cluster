@@ -6,30 +6,30 @@ locals {
 # Create S3 bucket for Cloudtrail
 ###
 
-module "s3_key" {
-  source  = "../common/kms"
+# module "s3_key" {
+#   source  = "../common/kms"
 
-  description = "s3 kms key"
-  key_name        = "alias/${local.uname}-s3-key"
-  tags            = var.tags
-  kms_policy      = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "key-default-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
-}
+#   description = "s3 kms key"
+#   key_name        = "alias/${local.uname}-s3-key"
+#   tags            = var.tags
+#   kms_policy      = <<POLICY
+# {
+#   "Version": "2012-10-17",
+#   "Id": "key-default-1",
+#   "Statement": [
+#     {
+#       "Sid": "Enable IAM User Permissions",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+#       },
+#       "Action": "kms:*",
+#       "Resource": "*"
+#     }
+#   ]
+# }
+# POLICY
+# }
 
 resource "random_password" "bucket_name_suffix" {
   length  = 5
@@ -47,7 +47,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encrypt_s3_bucket
 
   rule {
     apply_server_side_encryption_by_default {
-      kms_master_key_id = module.s3_key.kms_key_arn
+      # kms_master_key_id = module.s3_key.kms_key_arn
+      kms_master_key_id = var.kms_key_arn
       sse_algorithm     = "aws:kms"
     }
   }
@@ -111,44 +112,44 @@ resource "aws_s3_bucket_public_access_block" "restrict_s3_bucket" {
 # Create alerts sns topic
 ###
 
-module "sns_key" {
-  source  = "../common/kms"
+# module "sns_key" {
+#   source  = "../common/kms"
 
-  description = "sns kms key"
-  key_name        = "alias/${local.uname}-sns-key"
-  tags            = var.tags
-  kms_policy      = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "key-default-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    },
-    {
-      "Sid": "Allow Cloudwatch to use key",
-      "Effect": "Allow",
-      "Principal": {
-        "Service":[
-          "cloudwatch.amazonaws.com"
-        ]
-      },
-      "Action": [
-        "kms:Decrypt",
-        "kms:GenerateDataKey*"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
-}
+#   description = "sns kms key"
+#   key_name        = "alias/${local.uname}-sns-key"
+#   tags            = var.tags
+#   kms_policy      = <<POLICY
+# {
+#   "Version": "2012-10-17",
+#   "Id": "key-default-1",
+#   "Statement": [
+#     {
+#       "Sid": "Enable IAM User Permissions",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+#       },
+#       "Action": "kms:*",
+#       "Resource": "*"
+#     },
+#     {
+#       "Sid": "Allow Cloudwatch to use key",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "Service":[
+#           "cloudwatch.amazonaws.com"
+#         ]
+#       },
+#       "Action": [
+#         "kms:Decrypt",
+#         "kms:GenerateDataKey*"
+#       ],
+#       "Resource": "*"
+#     }
+#   ]
+# }
+# POLICY
+# }
 
 module "sns_topic" {
   source  = "terraform-aws-modules/sns/aws"
@@ -158,8 +159,8 @@ module "sns_topic" {
   display_name      = "${local.uname}-${var.topic_name}"
   create_sns_topic  = true
   fifo_topic        = false
-  kms_master_key_id = module.sns_key.kms_key_id
-
+  # kms_master_key_id = module.sns_key.kms_key_id
+  kms_master_key_id = var.kms_key_id
   tags              = var.tags
 }
 
@@ -174,123 +175,123 @@ resource "aws_sns_topic_subscription" "sns_topic_subscription" {
 # Create Cloudwatch Log Group
 ###
 
-module "cloudwatch_key" {
-  source  = "../common/kms"
+# module "cloudwatch_key" {
+#   source  = "../common/kms"
 
-  description = "cloudwatch kms key"
-  key_name        = "alias/${local.uname}-cloudwatch-key"
-  tags            = var.tags
-  kms_policy      = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "key-default-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    },
-    {
-      "Sid": "Allow Cloudwatch to use key",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
-      },
-      "Action": [
-        "kms:Encrypt*",
-        "kms:Decrypt*",
-        "kms:ReEncrypt*",
-        "kms:GenerateDataKey*",
-        "kms:Describe*"
-      ],
-      "Resource": "*",
-      "Condition": {
-        "ArnLike": {
-          "kms:EncryptionContext:aws:logs:arn": "arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:*"
-        }
-      }
-    }    
-  ]
-}
-POLICY
-}
+#   description = "cloudwatch kms key"
+#   key_name        = "alias/${local.uname}-cloudwatch-key"
+#   tags            = var.tags
+#   kms_policy      = <<POLICY
+# {
+#   "Version": "2012-10-17",
+#   "Id": "key-default-1",
+#   "Statement": [
+#     {
+#       "Sid": "Enable IAM User Permissions",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+#       },
+#       "Action": "kms:*",
+#       "Resource": "*"
+#     },
+#     {
+#       "Sid": "Allow Cloudwatch to use key",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "Service": "logs.${data.aws_region.current.name}.amazonaws.com"
+#       },
+#       "Action": [
+#         "kms:Encrypt*",
+#         "kms:Decrypt*",
+#         "kms:ReEncrypt*",
+#         "kms:GenerateDataKey*",
+#         "kms:Describe*"
+#       ],
+#       "Resource": "*",
+#       "Condition": {
+#         "ArnLike": {
+#           "kms:EncryptionContext:aws:logs:arn": "arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:*"
+#         }
+#       }
+#     }    
+#   ]
+# }
+# POLICY
+# }
 
 ###
 # Create Cloudtrail Trail
 ###
 
-module "cloudtrail_key" {
-  source  = "../common/kms"
+# module "cloudtrail_key" {
+#   source  = "../common/kms"
 
-  description = "cloudtrail kms key"
-  key_name        = "alias/${local.uname}-cloudtrail-key"
-  tags            = var.tags
-  kms_policy      = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "key-default-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    },
-    {
-      "Sid": "Allow CloudTrail to encrypt logs",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "cloudtrail.amazonaws.com"
-      },
-      "Action": "kms:GenerateDataKey*",
-      "Resource": "*",
-      "Condition": {
-        "ArnLike": {
-          "kms:EncryptionContext:aws:cloudtrail:arn": "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*",
-          "AWS:SourceArn": "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"
-        }
-      }
-    },
-    {
-      "Sid": "Allow CloudTrail to describe key",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "cloudtrail.amazonaws.com"
-      },
-      "Action": "kms:DescribeKey",
-      "Resource": "*"
-    },
-    {
-      "Sid": "Allow principals in the account to decrypt log files",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": [
-        "kms:Decrypt",
-        "kms:ReEncryptFrom"
-      ],
-      "Resource": "*",
-      "Condition": {
-        "StringEquals": {
-          "kms:CallerAccount": "${data.aws_caller_identity.current.account_id}"
-        },
-        "StringLike": {
-          "kms:EncryptionContext:aws:cloudtrail:arn": "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"
-        }
-      }
-    }
-  ]
-}
-POLICY
-}
+#   description = "cloudtrail kms key"
+#   key_name        = "alias/${local.uname}-cloudtrail-key"
+#   tags            = var.tags
+#   kms_policy      = <<POLICY
+# {
+#   "Version": "2012-10-17",
+#   "Id": "key-default-1",
+#   "Statement": [
+#     {
+#       "Sid": "Enable IAM User Permissions",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+#       },
+#       "Action": "kms:*",
+#       "Resource": "*"
+#     },
+#     {
+#       "Sid": "Allow CloudTrail to encrypt logs",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "Service": "cloudtrail.amazonaws.com"
+#       },
+#       "Action": "kms:GenerateDataKey*",
+#       "Resource": "*",
+#       "Condition": {
+#         "ArnLike": {
+#           "kms:EncryptionContext:aws:cloudtrail:arn": "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*",
+#           "AWS:SourceArn": "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"
+#         }
+#       }
+#     },
+#     {
+#       "Sid": "Allow CloudTrail to describe key",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "Service": "cloudtrail.amazonaws.com"
+#       },
+#       "Action": "kms:DescribeKey",
+#       "Resource": "*"
+#     },
+#     {
+#       "Sid": "Allow principals in the account to decrypt log files",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "AWS": "*"
+#       },
+#       "Action": [
+#         "kms:Decrypt",
+#         "kms:ReEncryptFrom"
+#       ],
+#       "Resource": "*",
+#       "Condition": {
+#         "StringEquals": {
+#           "kms:CallerAccount": "${data.aws_caller_identity.current.account_id}"
+#         },
+#         "StringLike": {
+#           "kms:EncryptionContext:aws:cloudtrail:arn": "arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"
+#         }
+#       }
+#     }
+#   ]
+# }
+# POLICY
+# }
 
 resource "aws_iam_role" "cloudtrail_role" {
   name   = "${local.uname}-cloudtrail-role"
@@ -340,7 +341,8 @@ resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
 resource "aws_cloudwatch_log_group" "alerts_log_group" {
   name              = "${local.uname}-alerts-log-group"
   retention_in_days = 365
-  kms_key_id        = module.cloudwatch_key.kms_key_arn
+  # kms_key_id        = module.cloudwatch_key.kms_key_arn
+  kms_key_id        = var.kms_key_arn
   tags              = var.tags
 }
 
@@ -352,7 +354,8 @@ resource "aws_cloudtrail" "alerts_trail" {
   cloud_watch_logs_role_arn     = aws_iam_role.cloudtrail_role.arn
   cloud_watch_logs_group_arn    = "${aws_cloudwatch_log_group.alerts_log_group.arn}:*"
   is_multi_region_trail         = true
-  kms_key_id                    = module.cloudtrail_key.kms_key_arn
+  # kms_key_id                    = module.cloudtrail_key.kms_key_arn
+  kms_key_id                    = var.kms_key_arn
   tags                          = var.tags
 }
 
