@@ -85,17 +85,12 @@ def send_email_alert(name, time, description, url):
     """Publish an alerting email message to the SNS Topic"""
     sns = boto3.client('sns', region_name=region)
     message="""
-ATTENTION,
-
-AWS ALARM TRIGGERD
-
-ALARM NAME:        {}
-ALARM_TIME:        {}
-ALARM_DESCRIPTION: {}
-ALARM_URL:         {}
-
-
-
+ATTENTION,\n
+AWS ALARM TRIGGERD\n
+NAME:               {}
+TIME:                {}
+DESCRIPTION: {}
+URL:                  {}\n\n\n
 (end of message)
 """.format(name, time, description, url)
 
@@ -122,7 +117,7 @@ def lambda_handler(event, context):
     alarm_name = event['alarmData']['alarmName']
     alarm_time = format_time(event['time'])
     alarm_description = event['alarmData']['configuration']['description']
-    alarm_url = "https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#alarmsV2:alarm/" + alarm_name
+    alarm_url = "https://" + region + ".console.aws.amazon.com/cloudwatch/home?region=" + region + "#alarmsV2:alarm/" + alarm_name
     print("alarm_name:        ", alarm_name)
     print("alarm_time:        ", alarm_time)
     print("alarm_description: ", alarm_description)
