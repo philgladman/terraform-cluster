@@ -92,3 +92,9 @@ variable "alarm_actions" {
   type        = list(string)
   default     = null
 }
+
+variable "lambda_function_name" {
+  description = "The Name of the lambda function"
+  type        = string
+  default     = ""
+}

@@ -36,7 +36,7 @@ module "quarterly_email" {
   timeout                           = 180
   source_path                       = "${path.module}/files/quarterly_email"
   cloudwatch_logs_retention_in_days = 90
-  cloudwatch_logs_kms_key_id        = var.cloudwatch_kms_key_arn
+  cloudwatch_logs_kms_key_id        = var.kms_key_arn
 
   environment_variables = {
     LOGGING_LEVEL = "${var.logging_level}"
@@ -71,7 +71,7 @@ resource "aws_iam_policy" "allow_sns" {
             "kms:DescribeKey",
             "kms:Decrypt"
           ],
-          "Resource" : "${var.sns_kms_key_arn}"
+          "Resource" : "${var.kms_key_arn}"
         }
       ]
   })
@@ -117,7 +117,7 @@ module "stop_ec2" {
   timeout                           = 180
   layers                            = [module.jmespath_layer.lambda_layer_arn]
   cloudwatch_logs_retention_in_days = 90
-  cloudwatch_logs_kms_key_id        = var.cloudwatch_kms_key_arn
+  cloudwatch_logs_kms_key_id        = var.kms_key_arn
 
   source_path = "${path.module}/files/stop_ec2"
 
@@ -189,7 +189,7 @@ module "ebs_alarm_cleanup" {
   timeout                           = 180
   layers                            = [module.jmespath_layer.lambda_layer_arn]
   cloudwatch_logs_retention_in_days = 90
-  cloudwatch_logs_kms_key_id        = var.cloudwatch_kms_key_arn
+  cloudwatch_logs_kms_key_id        = var.kms_key_arn
 
   source_path = "${path.module}/files/ebs_alarm_cleanup"
 
@@ -261,7 +261,7 @@ module "nonteam_signin_alarm" {
   timeout                           = 180
 
   cloudwatch_logs_retention_in_days = 365
-  cloudwatch_logs_kms_key_id        = var.cloudwatch_kms_key_arn
+  cloudwatch_logs_kms_key_id        = var.kms_key_arn
 
   source_path = "${path.module}/files/nonteam_signin_alarm"
 
@@ -302,7 +302,7 @@ resource "aws_iam_policy" "nonteam_signin_alarm" {
             "kms:DescribeKey",
             "kms:Decrypt"
           ],
-          "Resource" : "${var.sns_kms_key_arn}"
+          "Resource" : "${var.kms_key_arn}"
         },
         {
           "Effect" : "Allow",
@@ -363,3 +363,85 @@ resource "aws_lambda_permission" "allow_nonteam_signin_alarm_rule" {
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.nonteam_signin_alarm_rule.arn
 } */
+
+################################################################################
+# Test Lambda to print out CW Alarm details
+################################################################################
+
+module "print_cw_alarm_details" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  description                       = "Lambda Function to print out the CW Alarm details that triggered this functio"
+  function_name                     = "${local.uname}-print-cw-alarm-details"
+  create_role                       = true
+  handler                           = "print_cw_alarm_details.lambda_handler"
+  runtime                           = "python3.9"
+  timeout                           = 180
+  source_path                       = "${path.module}/files/print_cw_alarm_details"
+  cloudwatch_logs_retention_in_days = 90
+  cloudwatch_logs_kms_key_id        = var.kms_key_arn
+
+  environment_variables = {
+    LOGGING_LEVEL = "${var.logging_level}"
+    REGION        = "${var.region}"
+    SNS_TOPIC_ARN = "${var.sns_topic_arn}"
+  }
+}
+
+# # tfsec:ignore:no-policy-wildcards
+# resource "aws_iam_policy" "allow_sns" {
+
+#   name        = "${local.uname}-allow-sns-for-lambda"
+#   path        = "/"
+#   description = "AWS IAM Policy for lambda to send emails via sns"
+#   policy = jsonencode(
+#     {
+#       "Version" : "2012-10-17",
+#       "Statement" : [
+#         {
+#           "Effect" : "Allow",
+#           "Action" : [
+#             "sns:Publish",
+#           ],
+#           "Resource" : "${var.sns_topic_arn}"
+#         },
+#         {
+#           "Effect" : "Allow",
+#           "Action" : [
+#             "kms:ReEncrypt*",
+#             "kms:GenerateDataKey",
+#             "kms:Encrypt",
+#             "kms:DescribeKey",
+#             "kms:Decrypt"
+#           ],
+#           "Resource" : "${var.kms_key_arn}"
+#         }
+#       ]
+#   })
+# }
+
+resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_print_cw_alarm_details_role" {
+  role       = module.print_cw_alarm_details.lambda_role_name       
+  policy_arn = aws_iam_policy.allow_sns.arn
+}
+
+# resource "aws_cloudwatch_event_rule" "quarterly_cron" {
+#   name                = "${local.uname}-quarterly-cron"
+#   description         = "Cronjob to go off each quarter to email ISSM"
+#   schedule_expression = "cron(0 14 ? */3 4#2 *)"
+#   event_bus_name      = "default"
+# }
+
+# resource "aws_cloudwatch_event_target" "print_cw_alarm_details_target" {
+#   arn  = module.print_cw_alarm_details.lambda_function_arn
+#   rule = aws_cloudwatch_event_rule.quarterly_cron.name
+# }
+
+resource "aws_lambda_permission" "allow_print_cw_alarm_details" {
+  statement_id  = "AllowExecutionFromCWAlarm"
+  action        = "lambda:InvokeFunction"
+  function_name = module.print_cw_alarm_details.lambda_function_name
+  principal     = "lambda.alarms.cloudwatch.amazonaws.com"
+  # source_arn    = aws_cloudwatch_event_rule.quarterly_cron.arn
+  source_arn    = "arn:aws:cloudwatch::567243246807:alarm:*"
+}

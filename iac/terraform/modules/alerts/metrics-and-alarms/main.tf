@@ -27,3 +27,11 @@ resource "aws_cloudwatch_metric_alarm" "this" {
   alarm_actions       = var.alarm_actions
   tags                = var.tags
 }
+
+resource "aws_lambda_permission" "this" {
+  statement_id  = var.name
+  action        = "lambda:InvokeFunction"
+  function_name = var.lambda_function_name
+  principal     = "lambda.alarms.cloudwatch.amazonaws.com"
+  source_arn    = aws_cloudwatch_metric_alarm.this.arn
+}

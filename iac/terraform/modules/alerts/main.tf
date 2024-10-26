@@ -371,8 +371,9 @@ module "security_group_changes" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made to create, update or delete a Security Group."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-security-group-changes-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -384,8 +385,9 @@ module "network_acl_changes" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made to create, update or delete a Network ACL."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-network-acl-changes-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -397,8 +399,9 @@ module "gateway_changes" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made to create, update or delete a Customer or Internet Gateway."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-gateway-changes-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -410,8 +413,9 @@ module "ec2_instance_changes" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made to create, terminate, start, stop or reboot an EC2 instance."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-ec2-instance-changes-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -423,8 +427,9 @@ module "ec2_large_instance_changes" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made to create, terminate, start, stop or reboot an EC2 instance."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-ec2-large-instance-changes-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -436,8 +441,9 @@ module "cloudtrail_changes" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made to create, update or delete a CloudTrail trail, or to start or stop logging to a trail."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-cloudtrail-changes-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -449,8 +455,9 @@ module "auth_failure" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an unauthorized API call is made."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-auth-failure-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -462,8 +469,9 @@ module "iam_policy_changes" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made to change an IAM policy."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-iam-policy-changes-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -477,8 +485,9 @@ module "cmk_changes" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made to schedule the deletion of a CMK, or a CMK is disabled."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-cmk-changes-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -490,8 +499,9 @@ module "user_group_changes" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made modify, create, or destroy iam user, group, or credentials."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-user-group-changes-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -503,8 +513,9 @@ module "root_user_access" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API call is made to with the ROOT User credentials"
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-root-user-access-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -516,8 +527,9 @@ module "console_signon_failure" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an unauthenticated API call is made to sign into the console."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-console-signon-failure-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -529,8 +541,9 @@ module "non_team_signin" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an someone outside of the Team signs into our AWS Account."
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-non-team-signin-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -544,8 +557,9 @@ module "dev_failed_ssh_attempt" {
   log_group_name                  = "${var.development_bastion_log_group_name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when someone trys to SSH into the DEVELOPMENT Bastion and fails"
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-dev-failed-ssh-attempt-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -557,8 +571,9 @@ module "dev_exceed_failed_attempts" {
   log_group_name                  = "${var.development_bastion_log_group_name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when the maxium failed SSH attempts have been exceeded for the DEVELOPMENT Bastion"
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-dev-exceed-failed-ssh-attempts-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -570,8 +585,9 @@ module "dev_exceed_failed_attempts" {
   log_group_name                  = "${var.ops_p_bastion_log_group_name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when someone trys to SSH into the OPS-P Bastion and fails"
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-ops-p-failed-ssh-attempt-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -583,8 +599,9 @@ module "ops_p_exceed_failed_attempts" {
   log_group_name                  = "${var.ops_p_bastion_log_group_name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when the maxium failed SSH attempts have been exceeded for the OPS-P Bastion"
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-ops-p-exceed-failed-ssh-attempts-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 } */
 
@@ -596,8 +613,9 @@ module "delete_rds" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API Call is made to DELETE a RDS Database"
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-delete-rds-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -609,8 +627,9 @@ module "delete_s3" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API Call is made to DELETE a S3 Bucket"
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-delete-s3-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -622,8 +641,9 @@ module "vpc_changes" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API Call is made to Create/Update/Delete VPC"
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-vpc-changes-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -635,8 +655,9 @@ module "subnet_changes" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API Call is made to Create/Update/Delete Subnet"
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-subnet-changes-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -648,8 +669,9 @@ module "delete_ssm" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API Call is made to DELETE a SSM Parameter"
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-delete-ssm-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }
 
@@ -661,7 +683,8 @@ module "delete_secret" {
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an API Call is made to DELETE a Secret from Secrets Manager"
-  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}"]
+  alarm_actions                   = ["${module.sns_topic.sns_topic_arn}", "${var.lambda_function_arn}"]
   metric_transformation_name      = "${local.uname}-delete-secret-counter"
+  lambda_function_name            = var.lambda_function_name
   tags                            = var.tags
 }

@@ -59,3 +59,15 @@ variable "kms_key_id" {
   type        = string
   default     = ""
 }
+
+variable "lambda_function_name" {
+  description = "The Name of the lambda function"
+  type        = string
+  default     = ""
+}
+
+variable "lambda_function_arn" {
+  description = "The ARN of the lambda function"
+  type        = string
+  default     = ""
+}
