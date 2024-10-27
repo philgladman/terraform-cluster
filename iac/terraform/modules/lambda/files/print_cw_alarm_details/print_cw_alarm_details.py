@@ -25,13 +25,12 @@ def send_email_alert(name, time, description, url):
     sns = boto3.client('sns', region_name=region)
     message="""
 ATTENTION - AWS ALARM TRIGGERD,\n
-NAME:               {}
-TIME:                {}
-DESCRIPTION: {}
-URL:                  {}\n\n\n
+NAME:   --------------  {}
+TIME:     -------------- {}
+DESCRIPTION: ---- {}
+URL:      --------------  {}\n\n\n
 (end of message)
 """.format(name, time, description, url)
-
     try:
         sns_response = sns.publish(
             TopicArn=sns_topic_arn,
