@@ -5,12 +5,16 @@ import os
 from datetime import datetime, timedelta
 
 
-# set up simple logging
-logging.getLogger().setLevel(os.environ['LOGGING_LEVEL'])
-
 # Set Variables
+logging.getLogger().setLevel(os.environ['LOGGING_LEVEL'])
 region = os.environ.get('REGION')
+aws_partition = os.environ.get('AWS_PARTITON')
 sns_topic_arn = os.environ.get('SNS_TOPIC_ARN')
+
+if "gov" in aws_partition:
+    aws_url = "amazon" + aws_partition
+else:
+    aws_url = aws_partition + ".amazon"
 
 def format_time(event_time):
     """Inputs the time received from AWS and reformats & converts to CST time. The newly formatted time will look like this, 14:34:18 CST on Aug 04, 2023"""
@@ -53,6 +57,6 @@ def lambda_handler(event, context):
     alarm_name = event['alarmData']['alarmName']
     alarm_time = format_time(event['time'])
     alarm_description = event['alarmData']['configuration']['description']
-    alarm_url = "https://" + region + ".console.aws.amazon.com/cloudwatch/home?region=" + region + "#alarmsV2:alarm/" + alarm_name
+    alarm_url = "https://" + region + ".console." + aws_url + ".com/cloudwatch/home?region=" + region + "#alarmsV2:alarm/" + alarm_name
     send_email_alert(alarm_name, alarm_time, alarm_description, alarm_url)
     print("#"*25)

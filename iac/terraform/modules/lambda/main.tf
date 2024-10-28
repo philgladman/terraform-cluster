@@ -4,6 +4,7 @@ locals {
 
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
+data "aws_partition" "current" {}
 
 ################################################################################
 # Lambda Layers
@@ -385,6 +386,10 @@ module "print_cw_alarm_details" {
     LOGGING_LEVEL = "${var.logging_level}"
     REGION        = "${var.region}"
     SNS_TOPIC_ARN = "${var.sns_topic_arn}"
+    dns_suffix    = "${data.aws_partition.current.dns_suffix}"
+    id            = "${data.aws_partition.current.id}"
+    partition     = "${data.aws_partition.current.partition}"
+    reverse_dns_prefix    = "${data.aws_partition.current.reverse_dns_prefix}"
   }
 }
 
