@@ -372,7 +372,7 @@ resource "aws_lambda_permission" "allow_nonteam_signin_alarm_rule" {
 module "cloudwatch_alarms_notification" {
   source = "terraform-aws-modules/lambda/aws"
 
-  description                       = "Lambda Function to print out the CW Alarm details that triggered this function"
+  description                       = "Lambda Function to issue a notification when a Cloudwatch Alarm is triggered"
   function_name                     = "${local.uname}-cloudwatch-alarms-notification"
   create_role                       = true
   handler                           = "cloudwatch_alarms_notification.lambda_handler"

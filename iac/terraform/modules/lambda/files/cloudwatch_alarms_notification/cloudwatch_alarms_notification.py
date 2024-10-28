@@ -48,7 +48,7 @@ URL:      --------------  {}\n\n\n
     except botocore.exceptions.ClientError as error:
         logging.error(
             " Cannot publish to SNS Topic ARN: %s\n%s", sns_topic_arn,
-                error.sns_response['Error']['Message']
+                error.response['Error']['Message']
         )
 
 def lambda_handler(event, context):
