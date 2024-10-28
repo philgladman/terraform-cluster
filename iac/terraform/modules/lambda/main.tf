@@ -366,19 +366,19 @@ resource "aws_lambda_permission" "allow_nonteam_signin_alarm_rule" {
 } */
 
 ################################################################################
-# Test Lambda to print out CW Alarm details
+# Lambda Function to send notifications when Cloudwatch Alarms are triggered
 ################################################################################
 
-module "print_cw_alarm_details" {
+module "cloudwatch_alarms_notification" {
   source = "terraform-aws-modules/lambda/aws"
 
-  description                       = "Lambda Function to print out the CW Alarm details that triggered this functio"
-  function_name                     = "${local.uname}-print-cw-alarm-details"
+  description                       = "Lambda Function to print out the CW Alarm details that triggered this function"
+  function_name                     = "${local.uname}-cloudwatch-alarms-notification"
   create_role                       = true
-  handler                           = "print_cw_alarm_details.lambda_handler"
+  handler                           = "cloudwatch_alarms_notification.lambda_handler"
   runtime                           = "python3.9"
   timeout                           = 180
-  source_path                       = "${path.module}/files/print_cw_alarm_details"
+  source_path                       = "${path.module}/files/cloudwatch_alarms_notification"
   cloudwatch_logs_retention_in_days = 90
   cloudwatch_logs_kms_key_id        = var.kms_key_arn
 
@@ -386,67 +386,11 @@ module "print_cw_alarm_details" {
     LOGGING_LEVEL = "${var.logging_level}"
     REGION        = "${var.region}"
     SNS_TOPIC_ARN = "${var.sns_topic_arn}"
-    dns_suffix    = "${data.aws_partition.current.dns_suffix}"
-    id            = "${data.aws_partition.current.id}"
-    partition     = "${data.aws_partition.current.partition}"
-    reverse_dns_prefix    = "${data.aws_partition.current.reverse_dns_prefix}"
+    AWS_PARTITION = "${data.aws_partition.current.partition}"
   }
 }
 
-# # tfsec:ignore:no-policy-wildcards
-# resource "aws_iam_policy" "allow_sns" {
-
-#   name        = "${local.uname}-allow-sns-for-lambda"
-#   path        = "/"
-#   description = "AWS IAM Policy for lambda to send emails via sns"
-#   policy = jsonencode(
-#     {
-#       "Version" : "2012-10-17",
-#       "Statement" : [
-#         {
-#           "Effect" : "Allow",
-#           "Action" : [
-#             "sns:Publish",
-#           ],
-#           "Resource" : "${var.sns_topic_arn}"
-#         },
-#         {
-#           "Effect" : "Allow",
-#           "Action" : [
-#             "kms:ReEncrypt*",
-#             "kms:GenerateDataKey",
-#             "kms:Encrypt",
-#             "kms:DescribeKey",
-#             "kms:Decrypt"
-#           ],
-#           "Resource" : "${var.kms_key_arn}"
-#         }
-#       ]
-#   })
-# }
-
-resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_print_cw_alarm_details_role" {
-  role       = module.print_cw_alarm_details.lambda_role_name       
+resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_cloudwatch_alarms_notification_role" {
+  role       = module.cloudwatch_alarms_notification.lambda_role_name       
   policy_arn = aws_iam_policy.allow_sns.arn
-}
-
-# resource "aws_cloudwatch_event_rule" "quarterly_cron" {
-#   name                = "${local.uname}-quarterly-cron"
-#   description         = "Cronjob to go off each quarter to email ISSM"
-#   schedule_expression = "cron(0 14 ? */3 4#2 *)"
-#   event_bus_name      = "default"
-# }
-
-# resource "aws_cloudwatch_event_target" "print_cw_alarm_details_target" {
-#   arn  = module.print_cw_alarm_details.lambda_function_arn
-#   rule = aws_cloudwatch_event_rule.quarterly_cron.name
-# }
-
-resource "aws_lambda_permission" "allow_print_cw_alarm_details" {
-  statement_id  = "AllowExecutionFromCWAlarm"
-  action        = "lambda:InvokeFunction"
-  function_name = module.print_cw_alarm_details.lambda_function_name
-  principal     = "lambda.alarms.cloudwatch.amazonaws.com"
-  # source_arn    = aws_cloudwatch_event_rule.quarterly_cron.arn
-  source_arn    = "arn:aws:cloudwatch::567243246807:alarm:*"
 }
