@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 # Set Variables
 logging.getLogger().setLevel(os.environ['LOGGING_LEVEL'])
 region = os.environ.get('REGION')
-aws_partition = os.environ.get('AWS_PARTITON')
+aws_partition = os.environ.get('AWS_PARTITION')
 sns_topic_arn = os.environ.get('SNS_TOPIC_ARN')
 
 if "gov" in aws_partition:
