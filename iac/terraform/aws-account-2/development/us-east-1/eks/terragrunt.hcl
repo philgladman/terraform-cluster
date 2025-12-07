@@ -51,7 +51,7 @@ inputs = {
   ebs_kms_key_id             = dependency.sops.outputs.ebs_kms_key_id
   ebs_kms_key_arn            = dependency.sops.outputs.ebs_kms_key_arn
   region                     = local.region.locals.region
-  eks_admin_role_arn         = "arn:aws:iam::567243246807:role/ROL-terraform-admin"
+  eks_admin_role_name        = "ROL-terraform-admin"
   /* metrics_namespace          = "CloudWatch-Agent-Metrics"
   log_group_name             = "/aws/ec2/${local.name}/bastion" */
 

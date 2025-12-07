@@ -3,10 +3,6 @@ locals {
   attach_policy = var.attach_sns_kms_policy || var.attach_cloudtrail_kms_policy || var.attach_cloudwatch_kms_policy || var.attach_policy
 }
 
-data "aws_caller_identity" "current" {}
-
-data "aws_region" "current" {}
-
 resource "aws_kms_key" "kms_key" {
   count                   = var.create_key ? 1 : 0
   description             = var.description
@@ -45,7 +41,7 @@ data "aws_iam_policy_document" "iam_kms_policy" {
     sid = "Enable IAM User Permissions"
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
     effect    = "Allow"
     actions   = ["kms:*"]
@@ -80,7 +76,7 @@ data "aws_iam_policy_document" "cloudwatch_kms_policy" {
     sid = "Allow Cloudwatch to use key"
     principals {
       type = "Service"
-      identifiers = ["logs.${data.aws_region.current.name}.amazonaws.com"]
+      identifiers = ["logs.${var.region}.amazonaws.com"]
     }
     effect    = "Allow"
     actions   = [
@@ -94,7 +90,7 @@ data "aws_iam_policy_document" "cloudwatch_kms_policy" {
     condition {
       test     = "ArnLike"
       variable = "kms:EncryptionContext:aws:logs:arn"
-      values   = ["arn:aws:logs:*:${data.aws_caller_identity.current.account_id}:*"]
+      values   = ["arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:*"]
     }
   }
 }
@@ -115,12 +111,12 @@ data "aws_iam_policy_document" "cloudtrail_kms_policy" {
     condition {
       test     = "ArnLike"
       variable = "kms:EncryptionContext:aws:cloudtrail:arn"
-      values   = ["arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"]
+      values   = ["arn:${data.aws_partition.current.partition}:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"]
     }
     condition {
       test     = "ArnLike"
       variable = "AWS:SourceArn"
-      values   = ["arn:aws:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"]
+      values   = ["arn:${data.aws_partition.current.partition}:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/*"]
     }
   }
 }

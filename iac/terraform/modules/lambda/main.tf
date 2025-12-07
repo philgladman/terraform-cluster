@@ -1,5 +1,5 @@
 locals {
-  uname                 = lower(var.resource_name)
+  uname = lower(var.resource_name)
 }
 
 data "aws_caller_identity" "current" {}
@@ -37,12 +37,12 @@ module "quarterly_email" {
   timeout                           = 180
   source_path                       = "${path.module}/files/quarterly_email"
   cloudwatch_logs_retention_in_days = 90
-  cloudwatch_logs_kms_key_id        = var.kms_key_arn
+  cloudwatch_logs_kms_key_id        = "arn:${data.aws_partition.current.partition}:kms:${var.region}:${data.aws_caller_identity.current.id}:key/${var.kms_key_name}"
 
   environment_variables = {
     LOGGING_LEVEL = "${var.logging_level}"
     REGION        = "${var.region}"
-    SNS_TOPIC_ARN = "${var.sns_topic_arn}"
+    SNS_TOPIC_ARN = "arn:${data.aws_partition.current.partition}:sns:${var.region}:${data.aws_caller_identity.current.id}:${var.sns_topic_name}"
   }
 }
 
@@ -61,7 +61,7 @@ resource "aws_iam_policy" "allow_sns" {
           "Action" : [
             "sns:Publish",
           ],
-          "Resource" : "${var.sns_topic_arn}"
+          "Resource" : "arn:${data.aws_partition.current.partition}:sns:${var.region}:${data.aws_caller_identity.current.id}:${var.sns_topic_name}"
         },
         {
           "Effect" : "Allow",
@@ -72,14 +72,14 @@ resource "aws_iam_policy" "allow_sns" {
             "kms:DescribeKey",
             "kms:Decrypt"
           ],
-          "Resource" : "${var.kms_key_arn}"
+          "Resource" : "${"arn:${data.aws_partition.current.partition}:kms:${var.region}:${data.aws_caller_identity.current.id}:key/${var.kms_key_name}"}"
         }
       ]
   })
 }
 
 resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_quarterly_email_role" {
-  role       = module.quarterly_email.lambda_role_name       
+  role       = module.quarterly_email.lambda_role_name
   policy_arn = aws_iam_policy.allow_sns.arn
 }
 
@@ -118,7 +118,7 @@ module "stop_ec2" {
   timeout                           = 180
   layers                            = [module.jmespath_layer.lambda_layer_arn]
   cloudwatch_logs_retention_in_days = 90
-  cloudwatch_logs_kms_key_id        = var.kms_key_arn
+  cloudwatch_logs_kms_key_id        = "arn:${data.aws_partition.current.partition}:kms:${var.region}:${data.aws_caller_identity.current.id}:key/${var.kms_key_name}"
 
   source_path = "${path.module}/files/stop_ec2"
 
@@ -151,7 +151,7 @@ resource "aws_iam_policy" "allow_stop_ec2" {
 }
 
 resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_stop_ec2_role" {
-  role       = module.stop_ec2.lambda_role_name       
+  role       = module.stop_ec2.lambda_role_name
   policy_arn = aws_iam_policy.allow_stop_ec2.arn
 }
 
@@ -190,7 +190,7 @@ module "ebs_alarm_cleanup" {
   timeout                           = 180
   layers                            = [module.jmespath_layer.lambda_layer_arn]
   cloudwatch_logs_retention_in_days = 90
-  cloudwatch_logs_kms_key_id        = var.kms_key_arn
+  cloudwatch_logs_kms_key_id        = "arn:${data.aws_partition.current.partition}:kms:${var.region}:${data.aws_caller_identity.current.id}:key/${var.kms_key_name}"
 
   source_path = "${path.module}/files/ebs_alarm_cleanup"
 
@@ -223,7 +223,7 @@ resource "aws_iam_policy" "allow_ebs_alarm_cleanup" {
 }
 
 resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_ebs_alarm_cleanup_role" {
-  role       = module.ebs_alarm_cleanup.lambda_role_name       
+  role       = module.ebs_alarm_cleanup.lambda_role_name
   policy_arn = aws_iam_policy.allow_ebs_alarm_cleanup.arn
 }
 
@@ -262,7 +262,7 @@ module "nonteam_signin_alarm" {
   timeout                           = 180
 
   cloudwatch_logs_retention_in_days = 365
-  cloudwatch_logs_kms_key_id        = var.kms_key_arn
+  cloudwatch_logs_kms_key_id        = "arn:${data.aws_partition.current.partition}:kms:${var.region}:${data.aws_caller_identity.current.id}:key/${var.kms_key_name}"
 
   source_path = "${path.module}/files/nonteam_signin_alarm"
 
@@ -272,7 +272,7 @@ module "nonteam_signin_alarm" {
   environment_variables = {
     LOGGING_LEVEL        = "${var.logging_level}"
     REGION               = "${var.region}"
-    SNS_TOPIC_ARN        = "${var.sns_topic_arn}"
+    SNS_TOPIC_ARN        = "arn:${data.aws_partition.current.partition}:sns:${var.region}:${data.aws_caller_identity.current.id}:${var.sns_topic_name}"
     AUTHORIZED_TEAM_LIST = "${var.authorized_team_list}"
   }
 }
@@ -292,7 +292,7 @@ resource "aws_iam_policy" "nonteam_signin_alarm" {
           "Action" : [
             "sns:Publish",
           ],
-          "Resource" : "${var.sns_topic_arn}"
+          "Resource" : "arn:${data.aws_partition.current.partition}:sns:${var.region}:${data.aws_caller_identity.current.id}:${var.sns_topic_name}"
         },
         {
           "Effect" : "Allow",
@@ -303,7 +303,7 @@ resource "aws_iam_policy" "nonteam_signin_alarm" {
             "kms:DescribeKey",
             "kms:Decrypt"
           ],
-          "Resource" : "${var.kms_key_arn}"
+          "Resource" : "${"arn:${data.aws_partition.current.partition}:kms:${var.region}:${data.aws_caller_identity.current.id}:key/${var.kms_key_name}"}"
         },
         {
           "Effect" : "Allow",
@@ -338,7 +338,7 @@ resource "aws_cloudwatch_event_rule" "nonteam_signin_alarm_rule" {
   event_pattern       = jsonencode({
     "source": ["aws.cloudwatch"],
     "detail-type": ["CloudWatch Alarm State Change"],
-    "resources": ["arn:aws-us-gov:cloudwatch:${var.region}:${data.aws_caller_identity.current.id}:alarm:${local.uname}-non-team-signin"],
+    "resources": ["arn:${data.aws_partition.current.partition}:cloudwatch:${var.region}:${data.aws_caller_identity.current.id}:alarm:${local.uname}-non-team-signin"],
     "detail": {
       "alarmName": ["${local.uname}-non-team-signin"],
       "previousState": {
@@ -380,17 +380,17 @@ module "cloudwatch_alarms_notification" {
   timeout                           = 180
   source_path                       = "${path.module}/files/cloudwatch_alarms_notification"
   cloudwatch_logs_retention_in_days = 90
-  cloudwatch_logs_kms_key_id        = var.kms_key_arn
+  cloudwatch_logs_kms_key_id        = "arn:${data.aws_partition.current.partition}:kms:${var.region}:${data.aws_caller_identity.current.id}:key/${var.kms_key_name}"
 
   environment_variables = {
     LOGGING_LEVEL = "${var.logging_level}"
     REGION        = "${var.region}"
-    SNS_TOPIC_ARN = "${var.sns_topic_arn}"
+    SNS_TOPIC_ARN = "arn:${data.aws_partition.current.partition}:sns:${var.region}:${data.aws_caller_identity.current.id}:${var.sns_topic_name}"
     AWS_PARTITION = "${data.aws_partition.current.partition}"
   }
 }
 
 resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_cloudwatch_alarms_notification_role" {
-  role       = module.cloudwatch_alarms_notification.lambda_role_name       
+  role       = module.cloudwatch_alarms_notification.lambda_role_name
   policy_arn = aws_iam_policy.allow_sns.arn
 }

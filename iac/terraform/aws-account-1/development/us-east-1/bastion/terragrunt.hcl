@@ -48,7 +48,7 @@ inputs = {
   metrics_namespace          = "phil-${local.common.locals.env_name}-bastion-metrics"
   log_group_name             = "/aws/ec2/${local.name}/bastion"
   log_retention_in_days      = "90"
-  sns_topic_arn              = "arn:aws:sns:us-east-1:567243246807:phil-global-alerts"
+  sns_topic_name             = "phil-global-alerts"
 
   tags = {
     Environment  = "${local.common.locals.env_name}"

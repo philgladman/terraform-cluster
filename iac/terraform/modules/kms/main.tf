@@ -1,10 +1,10 @@
 locals {
-  uname             = lower(var.resource_name)
+  uname = lower(var.resource_name)
 }
 
 
 module "kms" {
-  count                   = var.create_key? 1 : 0
+  count                   = var.create_key ? 1 : 0
   source                  = "../common/kms"
   key_name                = "alias/${local.uname}-${var.key_alias}"
   description             = var.description
@@ -12,6 +12,7 @@ module "kms" {
   deletion_window_in_days = var.deletion_window_in_days
   is_enabled              = var.is_enabled
   enable_key_rotation     = var.enable_key_rotation
+  region                  = var.region
   multi_region            = var.multi_region
   attach_policy           = var.attach_policy
   kms_policy              = var.kms_policy

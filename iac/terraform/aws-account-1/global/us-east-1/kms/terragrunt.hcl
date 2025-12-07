@@ -18,6 +18,8 @@ inputs = {
   create_key    = true
   key_alias     = "general-key"
   description   = "KMS key to be used for all services"
+  region        = "${local.region.locals.region}"
+
 
   attach_sns_kms_policy        = true
   attach_cloudtrail_kms_policy = true

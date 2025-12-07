@@ -1,5 +1,5 @@
 locals {
-  uname             = lower(var.resource_name)
+  uname = lower(var.resource_name)
 }
 
 

@@ -1,21 +1,21 @@
 locals {
-  uname                 = lower(var.resource_name)
+  uname = lower(var.resource_name)
 }
 
 # tfsec:ignore:enable-tracing
 module "lambda_function" {
-  source           = "terraform-aws-modules/lambda/aws"
-  version          = "4.0.2"
-   
-  function_name    = "${local.uname}-k8s-deploy"
-  description      = "Lambda function to run deploy.sh on clusters after the are spun back up"
-  handler          = "k8s_deploy.lambda_handler"
-  runtime          = "python3.8"
-  source_path      = ["k8s_deploy/k8s_deploy.py"]
-  create_role      = true 
-  timeout          = "60"
-  layers           = [aws_lambda_layer_version.paramiko_lambda_layer.arn,aws_lambda_layer_version.scp_lambda_layer.arn]
-  publish          = true
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "4.0.2"
+
+  function_name = "${local.uname}-k8s-deploy"
+  description   = "Lambda function to run deploy.sh on clusters after the are spun back up"
+  handler       = "k8s_deploy.lambda_handler"
+  runtime       = "python3.8"
+  source_path   = ["k8s_deploy/k8s_deploy.py"]
+  create_role   = true
+  timeout       = "60"
+  layers        = [aws_lambda_layer_version.paramiko_lambda_layer.arn, aws_lambda_layer_version.scp_lambda_layer.arn]
+  publish       = true
   allowed_triggers = {
     S3Trigger = {
       #service    = "sns"
@@ -28,9 +28,9 @@ module "lambda_function" {
     aws_region = "${var.region}"
   }
 
-  tags          = merge({
+  tags = merge({
     "Name" = "${local.uname}-k8s-deploy",
-    }, var.tags)
+  }, var.tags)
 }
 
 resource "aws_lambda_layer_version" "paramiko_lambda_layer" {
@@ -49,43 +49,43 @@ resource "aws_lambda_layer_version" "scp_lambda_layer" {
 
 # tfsec:ignore:no-policy-wildcards
 resource "aws_iam_policy" "k8s_deploy_iam_policy" {
- 
- name         = "${local.uname}-k8s-deploy-iam-policy"
- path         = "/"
- description  = "Policy to allow k8s_deploy lambda function to access AWS Resource"
- policy       = jsonencode(
-  {
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Effect": "Allow",
-        "Action": [
-          "ssm:GetParameter"
+
+  name        = "${local.uname}-k8s-deploy-iam-policy"
+  path        = "/"
+  description = "Policy to allow k8s_deploy lambda function to access AWS Resource"
+  policy = jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "ssm:GetParameter"
           ],
-        "Resource": [
-          "${var.master_private_key_ssm_parameter_arn}",
-          "${aws_ssm_parameter.github_pat.arn}",
-          "${aws_ssm_parameter.github_username.arn}",
-          "${aws_ssm_parameter.node_readiness_script.arn}"
-        ]
-      },
-      {
-        "Effect": "Allow",
-        "Action": [
-          "ec2:DescribeInstances"
+          "Resource" : [
+            "${var.master_private_key_ssm_parameter_arn}",
+            "${aws_ssm_parameter.github_pat.arn}",
+            "${aws_ssm_parameter.github_username.arn}",
+            "${aws_ssm_parameter.node_readiness_script.arn}"
+          ]
+        },
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "ec2:DescribeInstances"
           ],
-        "Resource": "*"
-      }
-    ]
+          "Resource" : "*"
+        }
+      ]
   })
-  tags          = merge({
+  tags = merge({
     "Name" = "${local.uname}-k8s-deploy",
-    }, var.tags)
+  }, var.tags)
 }
 
 resource "aws_iam_role_policy_attachment" "k8s_deploy_policy_attachment" {
- role        = module.lambda_function.lambda_role_name
- policy_arn  = aws_iam_policy.k8s_deploy_iam_policy.arn
+  role       = module.lambda_function.lambda_role_name
+  policy_arn = aws_iam_policy.k8s_deploy_iam_policy.arn
 }
 
 resource "aws_ssm_parameter" "github_username" {
@@ -149,10 +149,10 @@ module "sns_topic" {
   source  = "terraform-aws-modules/sns/aws"
   version = "~> 3.0"
 
-  name              = "${local.uname}-lambda-sns-topic"
-  display_name      = "${local.uname}-lambda-sns-topic"
+  name         = "${local.uname}-lambda-sns-topic"
+  display_name = "${local.uname}-lambda-sns-topic"
   #kms_master_key_id = var.ebs_kms_key_id
-  tags              = var.tags
+  tags = var.tags
 }
 
 resource "aws_sns_topic_subscription" "lambda_sns_subscription" {
@@ -214,54 +214,54 @@ resource "aws_s3_bucket_public_access_block" "restrict_s3_bucket" {
 }
 
 resource "aws_iam_role" "cloudwatch_role" {
-name   = "${local.uname}-cloudwatch-role"
-assume_role_policy = jsonencode(
-  {
-  "Version": "2012-10-17",
-  "Statement": [
+  name = "${local.uname}-cloudwatch-role"
+  assume_role_policy = jsonencode(
     {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "cloudtrail.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-    ]
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Action" : "sts:AssumeRole",
+          "Principal" : {
+            "Service" : "cloudtrail.amazonaws.com"
+          },
+          "Effect" : "Allow",
+          "Sid" : ""
+        }
+      ]
   })
 }
 
 # tfsec:ignore:no-policy-wildcards
 resource "aws_iam_policy" "iam_policy_for_cloudwatch_role" {
- 
- name         = "${local.uname}-cloudwatch-access"
- path         = "/"
- description  = "AWS IAM Policy for cloudwatch"
- policy = jsonencode(
-  {
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Effect": "Allow",
-        "Action": [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        "Resource": "arn:aws:logs:*:*:*"
-      }
-    ]
+
+  name        = "${local.uname}-cloudwatch-access"
+  path        = "/"
+  description = "AWS IAM Policy for cloudwatch"
+  policy = jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Effect" : "Allow",
+          "Action" : [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ],
+          "Resource" : "arn:${data.aws_partition.current.partition}:logs:*:*:*"
+        }
+      ]
   })
 }
 
 resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
- role        = aws_iam_role.cloudwatch_role.name
- policy_arn  = aws_iam_policy.iam_policy_for_cloudwatch_role.arn
+  role       = aws_iam_role.cloudwatch_role.name
+  policy_arn = aws_iam_policy.iam_policy_for_cloudwatch_role.arn
 }
 
 resource "aws_cloudwatch_log_group" "lambda_cloudwatch_log_group" {
-  name       = "${local.uname}-lambda-log-group"
+  name = "${local.uname}-lambda-log-group"
   #kms_key_id = var.ebs_kms_key_arn
-  tags       = var.tags
+  tags = var.tags
 }
 
 resource "aws_cloudtrail" "s3-trigger-trail" {
@@ -272,7 +272,7 @@ resource "aws_cloudtrail" "s3-trigger-trail" {
   cloud_watch_logs_group_arn    = "${aws_cloudwatch_log_group.lambda_cloudwatch_log_group.arn}:*"
   cloud_watch_logs_role_arn     = aws_iam_role.cloudwatch_role.arn
   #kms_key_id                    = var.ebs_kms_key_arn
-  tags                          = var.tags
+  tags = var.tags
 
   event_selector {
     read_write_type           = "WriteOnly"
@@ -280,7 +280,7 @@ resource "aws_cloudtrail" "s3-trigger-trail" {
 
     data_resource {
       type   = "AWS::S3::Object"
-      values = ["arn:aws:s3:::test-bucket-phil-sully-gus/test.txt"]
+      values = ["arn:${data.aws_partition.current.partition}:s3:::test-bucket-phil-sully-gus/test.txt"]
     }
   }
 }
@@ -289,7 +289,7 @@ resource "aws_cloudtrail" "s3-trigger-trail" {
 resource "aws_cloudwatch_log_metric_filter" "lambda_metric_filter" {
   name           = "${local.uname}-test-metric-filter"
   pattern        = "{ ($.eventSource = s3.amazonaws.com)&&($.eventName = PutObject)&&($.requestParameters.bucketName = test-bucket-phil-sully-gus)&&($.requestParameters.key = test.txt) }"
-  log_group_name = "${aws_cloudwatch_log_group.lambda_cloudwatch_log_group.name}"
+  log_group_name = aws_cloudwatch_log_group.lambda_cloudwatch_log_group.name
 
   metric_transformation {
     name      = "S3TriggerEventCount"

@@ -4,7 +4,7 @@ output "EIP_docker_public_ip" {
 
 # rke2_subnet_id
 
- 
+
 #output "config-file" {
 #  value = aws_ssm_parameter.cloudwatch_agent.value
 #  sensitive = false

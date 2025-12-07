@@ -1,5 +1,5 @@
 variable "resource_name" {
-  type = string
+  type    = string
   default = ""
 }
 

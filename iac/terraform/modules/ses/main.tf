@@ -3,8 +3,8 @@
 } */
 
 resource "aws_ses_email_identity" "example" {
-  count  = length(var.emails)
-  email  = var.emails[count.index]
+  count = length(var.emails)
+  email = var.emails[count.index]
 }
 
 resource "aws_route53_zone" "main" {
@@ -14,13 +14,13 @@ resource "aws_route53_zone" "main" {
 module "ses" {
   source  = "cloudposse/ses/aws"
   version = "0.22.3"
-  
-  domain  = var.domain
-  zone_id = var.zone_id
-  ses_user_enabled = false
+
+  domain            = var.domain
+  zone_id           = var.zone_id
+  ses_user_enabled  = false
   ses_group_enabled = false
-  verify_dkim = true
-  verify_domain = true
+  verify_dkim       = true
+  verify_domain     = true
 }
 
 /* module "ses_iam_user" {

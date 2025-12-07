@@ -6,10 +6,10 @@ data "cloudinit_config" "this" {
     filename     = "00_userdata.sh"
     content_type = "text/x-shellscript"
     content = templatefile("${path.module}/files/userdata.sh", {
-      ssm_cloudwatch_config   = var.cloudwatch_agent_ssm_name
-      type                    = var.is_agent ? "agent" : "server"
-      token_bucket            = var.token_bucket_id
-      token_object            = var.token_object_id
+      ssm_cloudwatch_config = var.cloudwatch_agent_ssm_name
+      type                  = var.is_agent ? "agent" : "server"
+      token_bucket          = var.token_bucket_id
+      token_object          = var.token_object_id
     })
   }
 }
@@ -80,7 +80,7 @@ data "aws_iam_policy_document" "ssm_access_policy_doc" {
     effect  = "Allow"
     actions = ["ssm:GetParameter"]
     resources = [
-      "arn:aws:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.cloudwatch_agent_ssm_name}"
+      "arn:${data.aws_partition.current.partition}:ssm:${var.region}:${data.aws_caller_identity.current.account_id}:parameter/${var.cloudwatch_agent_ssm_name}"
     ]
   }
 }
@@ -88,17 +88,17 @@ data "aws_iam_policy_document" "ssm_access_policy_doc" {
 data "aws_iam_policy_document" "cloudwatch_agent_policy_doc" {
   version = "2012-10-17"
   statement {
-    effect  = "Allow"
+    effect = "Allow"
     actions = [
-        "cloudwatch:PutMetricData",
-        "ec2:DescribeVolumes",
-        "ec2:DescribeTags",
-        "logs:PutLogEvents",
-        "logs:DescribeLogStreams",
-        "logs:DescribeLogGroups",
-        "logs:CreateLogStream",
-        "logs:CreateLogGroup"
-        ]
+      "cloudwatch:PutMetricData",
+      "ec2:DescribeVolumes",
+      "ec2:DescribeTags",
+      "logs:PutLogEvents",
+      "logs:DescribeLogStreams",
+      "logs:DescribeLogGroups",
+      "logs:CreateLogStream",
+      "logs:CreateLogGroup"
+    ]
     resources = ["*"]
   }
 }

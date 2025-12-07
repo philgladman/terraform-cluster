@@ -8,6 +8,10 @@ variable "key_name" {
   type = string
 }
 
+variable "region" {
+  type = string
+}
+
 variable "tags" {
   type = map(string)
 }

@@ -34,8 +34,8 @@ inputs = {
   production_bastion_log_group_name  = local.alerts.locals.production_bastion_log_group_name
   kms_key_arn                        = dependency.kms.outputs.kms_key_arn
   kms_key_id                         = dependency.kms.outputs.kms_key_id
-  lambda_function_arn                = local.alerts.locals.lambda_function_arn
   lambda_function_name               = local.alerts.locals.lambda_function_name
+  region                             = "${local.region.locals.region}"
 
   tags = {
     Environment  = "${local.common.locals.env_name}"

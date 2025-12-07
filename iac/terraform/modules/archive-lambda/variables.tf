@@ -9,31 +9,31 @@ variable "tags" {
 }
 
 variable "region" {
-  type        = string
-  default     = "us-east-1"
+  type    = string
+  default = "us-east-1"
 }
 
 variable "master_private_key_ssm_parameter_arn" {
-  type        = string
-  default     = ""
+  type    = string
+  default = ""
 }
 
 variable "ebs_kms_key_id" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "ebs_kms_key_arn" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "github_username" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "github_pat" {
-  type = string
+  type    = string
   default = ""
 }

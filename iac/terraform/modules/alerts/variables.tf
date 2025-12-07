@@ -10,6 +10,10 @@ variable "topic_name" {
   default     = ""
 }
 
+variable "region" {
+  type = string
+}
+
 variable "tags" {
   description = "Map of tags to add to all resources created"
   type        = map(string)

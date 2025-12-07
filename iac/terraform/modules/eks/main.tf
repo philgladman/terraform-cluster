@@ -1,8 +1,12 @@
 locals {
-  uname             = lower(var.resource_name)
+  uname = lower(var.resource_name)
 }
 
 data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
 
 /* resource "aws_security_group" "cluster_sg" {
   name        = "${local.uname}-eks-cluster-sg"
@@ -34,7 +38,7 @@ module "eks" {
   cluster_name    = "${local.uname}-test-cluster"
   cluster_version = "1.24"
 
-  cluster_endpoint_public_access  = false
+  cluster_endpoint_public_access = false
 
   cluster_addons = {
     coredns = {
@@ -48,9 +52,9 @@ module "eks" {
     }
   }
 
-  vpc_id                    = var.vpc_id
-  subnet_ids                = var.private_subnet_ids
-  control_plane_subnet_ids  = var.private_subnet_ids
+  vpc_id                   = var.vpc_id
+  subnet_ids               = var.private_subnet_ids
+  control_plane_subnet_ids = var.private_subnet_ids
   /* cluster_security_group_id = aws_security_group.cluster_sg.id */
 
   # Self Managed Node Group(s)
@@ -58,7 +62,7 @@ module "eks" {
     instance_type                          = "m6i.large"
     update_launch_template_default_version = true
     iam_role_additional_policies = {
-      AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      AmazonSSMManagedInstanceCore = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
     }
   } */
 
@@ -95,7 +99,7 @@ module "eks" {
     instance_types = ["m6i.large", "m5.large", "m5n.large", "m5zn.large"]
   } */
 
-    /* eks_managed_node_group_defaults = {
+  /* eks_managed_node_group_defaults = {
     ami_id            = var.ami_id
     ebs_optimized     = true
     enable_monitoring = true
@@ -164,20 +168,20 @@ module "eks" {
 
   aws_auth_roles = [
     {
-      rolearn  = "arn:aws:iam::567243246807:role/ROL-terraform-admin"
+      rolearn  = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.id}:role/ROL-terraform-admin"
       username = "phil-bah-role"
       groups   = ["system:masters"]
     },
     {
-      rolearn  = "arn:aws:iam::567243246807:role/phil-dev-bastion-role"
+      rolearn  = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.id}:role/phil-dev-bastion-role"
       username = "bastion"
       groups   = ["system:masters"]
-    },  
+    },
   ]
 
   aws_auth_users = [
     {
-      userarn  = "arn:aws:iam::567243246807:user/phil"
+      userarn  = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.id}:user/phil"
       username = "phil"
       groups   = ["system:masters"]
     },

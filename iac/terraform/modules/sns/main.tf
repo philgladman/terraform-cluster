@@ -1,5 +1,5 @@
 locals {
-  uname  = lower(var.resource_name)
+  uname = lower(var.resource_name)
 }
 
 module "sns_topic" {
@@ -12,7 +12,7 @@ module "sns_topic" {
   fifo_topic        = false
   kms_master_key_id = var.sns_kms_key_id
 
-  tags              = var.tags
+  tags = var.tags
 }
 
 resource "aws_sns_topic_subscription" "sns_topic_subscription" {

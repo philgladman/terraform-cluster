@@ -1,5 +1,5 @@
 output "controlplane_security_group_id" {
-   value = aws_security_group.controlplane_sg.id
+  value = aws_security_group.controlplane_sg.id
 }
 
 output "controlplane_private_ip" {

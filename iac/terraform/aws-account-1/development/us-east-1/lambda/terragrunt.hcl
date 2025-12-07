@@ -38,8 +38,8 @@ resource_name      = "phil-${local.common.locals.env_name}"
 logging_level      = "INFO"
 region             = local.region.locals.region
 /* sns_topic_arn      = dependencies.alerts.outputs.sns_topic_arnsns_topic_arn */
-sns_topic_arn      = "arn:aws:sns:us-east-1:567243246807:phil-global-alerts"
-kms_key_arn        = "arn:aws:kms:us-east-1:567243246807:key/a2fb33f9-e0f8-4eb7-ba29-052bc99c8fca"
+sns_topic_name     = "phil-global-alerts"
+kms_key_id         = "a2fb33f9-e0f8-4eb7-ba29-052bc99c8fca"
 
   tags = {
     Environment  = "${local.common.locals.env_name}"

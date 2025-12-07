@@ -1,5 +1,5 @@
 variable "resource_name" {
-  type = string
+  type    = string
   default = ""
 }
 
@@ -12,43 +12,43 @@ variable "rke2_subnet_ids" {
 }
 
 variable "master_ssh_key_name" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "vpc_id" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "ebs_kms_key_id" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "ebs_kms_key_arn" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "region" {
-  type        = string
-  default     = ""
+  type    = string
+  default = ""
 }
 
 variable "cloudwatch_agent_ssm_name" {
-  type        = string
-  default     = ""
+  type    = string
+  default = ""
 }
 
 variable "source_ami" {
-  type        = string
-  default     = ""
+  type    = string
+  default = ""
 }
 
 variable "controlplane_instance_type" {
-  type        = string
-  default     = ""
+  type    = string
+  default = ""
 }
 
 variable "bastion_security_group_id" {

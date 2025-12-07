@@ -7,7 +7,12 @@ variable "tags" {
 }
 
 variable "create_key" {
-  type = bool
+  type    = bool
+  default = true
+}
+
+variable "region" {
+  type = string
 }
 
 variable "description" {
@@ -15,23 +20,28 @@ variable "description" {
 }
 
 variable "key_usage" {
-  type = string
+  type    = string
+  default = "ENCRYPT_DECRYPT"
 }
 
 variable "deletion_window_in_days" {
-  type = string
+  type    = string
+  default = 7
 }
 
 variable "is_enabled" {
-  type = bool
+  type    = bool
+  default = true
 }
 
 variable "enable_key_rotation" {
-  type = bool
+  type    = bool
+  default = true
 }
 
 variable "multi_region" {
-  type = bool
+  type    = bool
+  default = false
 }
 
 variable "key_alias" {
@@ -41,10 +51,12 @@ variable "key_alias" {
 variable "attach_policy" {
   description = "Controls if KMS key should have policy attached (set to `true` to use value of `policy` as kms policy)"
   type        = bool
+  default     = false
 }
 
 variable "kms_policy" {
-  type = string
+  type    = string
+  default = ""
 }
 
 variable "attach_sns_kms_policy" {

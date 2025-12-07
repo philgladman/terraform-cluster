@@ -10,7 +10,7 @@ data "aws_availability_zones" "available" {}
 
 module "vpc" {
   source                       = "terraform-aws-modules/vpc/aws"
-  version                      = "3.16.0"
+  version                      = "6.5.1"
   name                         = local.uname
   cidr                         = var.cidr
   azs                          = slice(data.aws_availability_zones.available.names, 1, 4)
@@ -31,7 +31,7 @@ module "vpc" {
   create_database_subnet_group = false
   map_public_ip_on_launch      = true
   enable_ipv6                  = false
-  tags = var.tags
+  tags                         = var.tags
 }
 
 data "aws_region" "current" {}
@@ -42,21 +42,21 @@ resource "aws_security_group" "vpc_endpoints" {
   vpc_id      = module.vpc.vpc_id
 
   ingress {
-    description      = "Allow HTTPS"
-    from_port        = 443
-    to_port          = 443
-    protocol         = "tcp"
-    cidr_blocks      = ["${module.vpc.vpc_cidr_block}"]
+    description = "Allow HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["${module.vpc.vpc_cidr_block}"]
   }
 
   tags = var.tags
 }
 
 resource "aws_vpc_endpoint" "s3_endpoint" {
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.s3"
-  vpc_endpoint_type   = "Gateway"
-  vpc_id              = module.vpc.vpc_id
-  route_table_ids     = [
+  service_name      = "com.amazonaws.${var.region}.s3"
+  vpc_endpoint_type = "Gateway"
+  vpc_id            = module.vpc.vpc_id
+  route_table_ids = [
     module.vpc.private_route_table_ids[0],
     module.vpc.public_route_table_ids[0]
   ]
@@ -64,9 +64,9 @@ resource "aws_vpc_endpoint" "s3_endpoint" {
 
 
 resource "aws_vpc_endpoint" "endpoint" {
-  count = length(var.endpoints)
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.${var.endpoints[count.index]}"
-  subnet_ids          = [
+  count        = length(var.endpoints)
+  service_name = "com.amazonaws.${var.region}.${var.endpoints[count.index]}"
+  subnet_ids = [
     module.vpc.private_subnets[0]
   ]
 

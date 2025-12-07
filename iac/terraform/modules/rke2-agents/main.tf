@@ -1,5 +1,5 @@
 locals {
-  uname             = lower(var.resource_name)
+  uname = lower(var.resource_name)
 }
 
 resource "aws_security_group" "agent_sg" {
@@ -8,26 +8,26 @@ resource "aws_security_group" "agent_sg" {
   vpc_id      = var.vpc_id
 
   ingress {
-    description      = "Allow all from bastion"
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    security_groups  = ["${var.bastion_security_group_id}"]
+    description     = "Allow all from bastion"
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = ["${var.bastion_security_group_id}"]
   }
 
   ingress {
-    description      = "Allow access from controlplane"
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    security_groups  = ["${var.controlplane_security_group_id}"]
+    description     = "Allow access from controlplane"
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = ["${var.controlplane_security_group_id}"]
   }
 
   egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = var.tags
@@ -40,7 +40,7 @@ resource "aws_security_group_rule" "allow_agent_to_cp" {
   to_port                  = 0
   protocol                 = "-1"
   source_security_group_id = aws_security_group.agent_sg.id
-  security_group_id        = "${var.controlplane_security_group_id}"
+  security_group_id        = var.controlplane_security_group_id
 }
 
 #
@@ -238,7 +238,7 @@ resource "aws_autoscaling_group" "agent_asg" {
     for_each = merge({
       "Name" = "${local.uname}-agent"
     }, var.tags)
-    
+
     content {
       key                 = tag.key
       value               = tag.value
@@ -264,7 +264,7 @@ resource "aws_autoscaling_group" "agent_asg" {
       volume_size = 20
       encrypted   = true
       kms_key_id  = var.ebs_kms_key_arn
-      #kms_key_id  = "arn:aws:kms:us-east-1:567243246807:key/6f7218de-1d68-4543-9503-53bafae6decc"
+      #kms_key_id  = "arn:${data.aws_partition.current.partition}:kms:${var.region}:${data.aws_caller_identity.current.id}:key/6f7218de-1d68-4543-9503-53bafae6decc"
     }
   }
 }
@@ -287,23 +287,23 @@ resource "aws_autoscaling_group" "test_asg" {
 ##### Creating and attaching IAM roles and policies
 
 resource "aws_iam_role_policy_attachment" "s3-attachment" {
-    role       = aws_iam_role.agent-role.name
-    policy_arn = aws_iam_policy.agent-s3-access-policy.arn
+  role       = aws_iam_role.agent-role.name
+  policy_arn = aws_iam_policy.agent-s3-access-policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "kms-attachment" {
-    role       = aws_iam_role.agent-role.name
-    policy_arn = aws_iam_policy.agent-kms-access-policy.arn
+  role       = aws_iam_role.agent-role.name
+  policy_arn = aws_iam_policy.agent-kms-access-policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "ssm-attachment" {
-    role       = aws_iam_role.agent-role.name
-    policy_arn = aws_iam_policy.agent-ssm-access-policy.arn
+  role       = aws_iam_role.agent-role.name
+  policy_arn = aws_iam_policy.agent-ssm-access-policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "cloudwatch-attachment" {
-    role       = aws_iam_role.agent-role.name
-    policy_arn = aws_iam_policy.agent-cloudwatch-agent-access-policy.arn
+  role       = aws_iam_role.agent-role.name
+  policy_arn = aws_iam_policy.agent-cloudwatch-agent-access-policy.arn
 }
 
 resource "aws_iam_policy" "agent-s3-access-policy" {
@@ -318,21 +318,21 @@ resource "aws_iam_policy" "agent-kms-access-policy" {
   path        = "/"
   description = "KMS policy"
   policy      = data.aws_iam_policy_document.kms_access_policy_doc.json
-} 
+}
 
 resource "aws_iam_policy" "agent-ssm-access-policy" {
   name        = "${local.uname}-agent-ssm-access-policy"
   path        = "/"
   description = "SSM policy"
   policy      = data.aws_iam_policy_document.ssm_access_policy_doc.json
-} 
+}
 
 resource "aws_iam_policy" "agent-cloudwatch-agent-access-policy" {
   name        = "${local.uname}-agent-cloudwatch-agent-policy"
   path        = "/"
   description = "Cloudwatch Agent policy"
   policy      = data.aws_iam_policy_document.cloudwatch_agent_policy_doc.json
-} 
+}
 
 resource "aws_iam_role" "agent-role" {
   name               = "${local.uname}-agent-role"

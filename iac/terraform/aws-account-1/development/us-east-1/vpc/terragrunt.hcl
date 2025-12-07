@@ -16,6 +16,7 @@ inputs = {
   resource_name = "phil-${local.common.locals.env_name}"
   cidr          = local.vpc.locals.cidr
   endpoints     = local.vpc.locals.endpoints
+  region        = local.region.locals.region
 
   tags = {
     Environment  = "${local.common.locals.env_name}"

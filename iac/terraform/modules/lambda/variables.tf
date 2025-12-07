@@ -4,7 +4,7 @@ variable "resource_name" {
 
 variable "region" {
   description = "aws region"
-  type = string
+  type        = string
 }
 
 variable "tags" {
@@ -15,26 +15,26 @@ variable "tags" {
 
 variable "logging_level" {
   description = "Level to set python logger at"
-  type = string
+  type        = string
 }
 
-variable "sns_topic_arn" {
+variable "sns_topic_name" {
   description = "ARN of SNS Topic to Publish Email"
-  type = string
+  type        = string
 }
 
-# variable "sns_kms_key_arn" {
+# variable "sns_kms_key_name" {
 #   description = "The Key ARN of the KMS Key for the SNS Topic"
 #   type        = string
 #   default     = ""
 # }
 
-# variable "cloudwatch_kms_key_arn" {
+# variable "cloudwatch_kms_key_name" {
 #   description = "ARN of Cloudwatch KMS Key"
 #   type = string
 # }
 
-variable "kms_key_arn" {
+variable "kms_key_name" {
   description = "The ARN of the KMS Key"
   type        = string
   default     = ""
