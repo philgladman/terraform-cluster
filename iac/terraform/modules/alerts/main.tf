@@ -451,7 +451,7 @@ module "auth_failure" {
   source  = "./metrics-and-alarms"
 
   name                            = "${local.uname}-auth-failure"
-  pattern                         = "{ ($.errorCode = \"*UnauthorizedOperation\") || ($.errorCode = \"AccessDenied*\") }"
+  pattern                         = "{ (($.errorCode = \"*UnauthorizedOperation\") || ($.errorCode = \"AccessDenied*\")) && ($.userAgent != \"resource-explorer-2.amazonaws.com\") }"
   log_group_name                  = "${aws_cloudwatch_log_group.alerts_log_group.name}"
   metric_transformation_namespace = "${local.uname}-cloudtrail-metrics"
   alarm_description               = "Alarms when an unauthorized API call is made."
