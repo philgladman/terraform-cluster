@@ -1,0 +1,37 @@
+name: "Test-component-raw"
+description: "This is a test"
+schemaVersion: 1.0
+constants:
+  - ScriptFullName:
+      type: string
+      value: '/tmp/test.sh'
+phases:
+  - name: build
+    steps:
+      - name: CreatingTestFile
+        action: CreateFile
+        inputs:
+          - path: '{{ ScriptFullName }}'
+            content: |-
+              #!/bin/bash
+              set -euox pipefail
+
+              echo "########################################"
+              echo "example 2 - fully file"
+              echo "########################################"
+
+              echo "hello world from '{{ ScriptFullName }}'"
+              echo "ENV: ${ENV}"
+
+              echo "done"
+              exit 0
+            overwrite: false
+            owner: "root"
+            group: "root"
+            permissions: 0700
+      - name: ExecuteTestScript
+        action: ExecuteBash
+        onFailure: Continue
+        inputs:
+          commands:
+            - /bin/bash '{{ ScriptFullName }}'
