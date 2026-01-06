@@ -30,6 +30,7 @@ inputs = {
   ami_name_prefix     = "amazon-eks-node-al2023"
   source_ami_arch     = "x86_64"
   eks_version         = "1.34"
+  kms_key_alias       = "alias/phil-global-general-key"
 
   tags = {
     Environment  = "${local.common.locals.env_name}"

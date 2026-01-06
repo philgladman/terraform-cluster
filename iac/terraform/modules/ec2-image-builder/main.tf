@@ -5,6 +5,10 @@ locals {
 
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_kms_alias" "global_key" {
+  name = var.kms_key_alias
+}
 
 ################################################################################
 # Key Pair
@@ -68,19 +72,23 @@ data "aws_iam_policy_document" "example" {
   statement {
     effect = "Allow"
     actions = [
-      "s3:GetObject",
-      "s3:List*"
-    ]
-    resources = ["*"]
-  }
-  statement {
-    effect = "Allow"
-    actions = [
       "kms:Encrypt*",
       "kms:Decrypt*",
       "kms:GenerateData*"
     ]
-    resources = ["*"]
+    resources = ["${data.aws_kms_alias.global_key.target_key_arn}"]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:List*"
+    ]
+    resources = [
+      "${aws_s3_bucket.example.arn}",
+      "${aws_s3_bucket.example.arn}/*"
+    ]
   }
   statement {
     effect = "Allow"
@@ -88,7 +96,9 @@ data "aws_iam_policy_document" "example" {
       "ssm:*",
       "ec2:*",
       "ssmmessages:*",
-      "imagebuilder:*"
+      "imagebuilder:*",
+      "logs:*",
+      "events:*"
     ]
     resources = ["*"]
   }
@@ -112,14 +122,79 @@ resource "aws_iam_role_policy_attachment" "example" {
   policy_arn = aws_iam_policy.example.arn
 }
 
-# resource "aws_iam_role_policy_attachment" "attach_ssm_aws_pol" {
-#   role       = aws_iam_role.example.name
-#   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
-# }
-
 resource "aws_iam_instance_profile" "example" {
   name = "${local.uname}-imagebuilder"
   role = aws_iam_role.example.name
+}
+
+################################################################################
+# S3 Bucket for Logs
+################################################################################
+
+resource "aws_s3_bucket" "example" {
+  bucket = "${local.uname}-ec2-imagebuilder-logs"
+  tags   = var.tags
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "example" {
+  bucket = aws_s3_bucket.example.bucket
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = data.aws_kms_alias.global_key.target_key_arn
+      sse_algorithm     = "aws:kms"
+    }
+  }
+}
+
+# resource "aws_s3_bucket_policy" "example" {
+#   bucket = aws_s3_bucket.example.id
+#   policy = <<POLICY
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Sid": "AWSCloudTrailAclCheck",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "Service": "cloudtrail.amazonaws.com"
+#       },
+#       "Action": "s3:GetBucketAcl",
+#       "Resource": "${aws_s3_bucket.cloudtrail_s3_bucket.arn}",
+#       "Condition": {
+#         "StringLike": {
+#           "AWS:SourceArn": "arn:${data.aws_partition.current.partition}:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/${local.uname}-${var.trail_name}"
+#         }
+#       }
+#     },
+#     {
+#       "Sid": "AWSCloudTrailWrite",
+#       "Effect": "Allow",
+#       "Principal": {
+#         "Service": "cloudtrail.amazonaws.com"
+#       },
+#       "Action": "s3:PutObject",
+#       "Resource": "${aws_s3_bucket.cloudtrail_s3_bucket.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
+#       "Condition": {
+#         "StringEquals": {
+#           "s3:x-amz-acl": "bucket-owner-full-control"
+#         },
+#         "StringLike": {
+#           "AWS:SourceArn": "arn:${data.aws_partition.current.partition}:cloudtrail:*:${data.aws_caller_identity.current.account_id}:trail/${local.uname}-${var.trail_name}"
+#         }
+#       }
+#     }
+#   ]
+# }
+# POLICY
+# }
+
+resource "aws_s3_bucket_public_access_block" "example" {
+  bucket                  = aws_s3_bucket.example.id
+  block_public_acls       = true
+  ignore_public_acls      = true
+  block_public_policy     = true
+  restrict_public_buckets = true
 }
 
 ################################################################################
@@ -137,12 +212,12 @@ resource "aws_imagebuilder_infrastructure_configuration" "example" {
   subnet_id                     = var.private_subnet_id
   terminate_instance_on_failure = true
 
-  #   logging {
-  #     s3_logs {
-  #       s3_bucket_name = var.logging_s3_bucket_name
-  #       s3_key_prefix  = "logs"
-  #     }
-  #   }
+    logging {
+      s3_logs {
+        s3_bucket_name = aws_s3_bucket.example.bucket
+        s3_key_prefix  = "build-logs"
+      }
+    }
 
   tags = var.tags
 }
@@ -179,6 +254,15 @@ resource "aws_imagebuilder_component" "example1" {
     phases:
       - name: build
         steps:
+          - name: Test1
+            action: ExecuteBash
+            onFailure: Continue
+            inputs:
+              commands:
+                - echo "#############################################"
+                - echo "hello world"
+                - echo "Next step is creating {{ ScriptFullName }} file"
+                - echo "#############################################"
           - name: CreatingTestFile
             action: CreateFile
             inputs:
@@ -191,21 +275,30 @@ resource "aws_imagebuilder_component" "example1" {
                   echo "example 1 - inline"
                   echo "########################################"
 
-                  echo "hello world from '{{ ScriptFullName }}'"
+                  echo "hello world from {{ ScriptFullName }}"
                   echo "ENV: ${local.env}"
 
                   echo "done"
                   exit 0
-                overwrite: false
+                overwrite: true
                 owner: "root"
                 group: "root"
-                permissions: "0700"
+                permissions: 0700
           - name: ExecuteTestScript
             action: ExecuteBash
             onFailure: Continue
             inputs:
               commands:
                 - /bin/bash '{{ ScriptFullName }}'
+          - name: Test2
+            action: ExecuteBash
+            onFailure: Continue
+            inputs:
+              commands:
+                - echo "#############################################"
+                - echo "hello world"
+                - echo "Done running {{ ScriptFullName }} file"
+                - echo "#############################################"
   YAML
 }
 
@@ -240,7 +333,7 @@ resource "aws_imagebuilder_component" "example3" {
           name   = "CreateTestFile"
           action = "CreateFile"
           inputs = [{
-            overwrite   = false
+            overwrite   = true
             owner       = "root"
             group       = "root"
             permissions = 0700
@@ -249,7 +342,7 @@ resource "aws_imagebuilder_component" "example3" {
                 DATA = "example 3 - just script"
                 ENV = local.env
               })
-            path     = "'{{ ScriptFullName }}'"
+            path     = "{{ ScriptFullName }}"
           }]
           onFailure = "Continue"
         },
@@ -302,6 +395,7 @@ resource "aws_imagebuilder_component" "example4" {
                 - /bin/bash '{{ ScriptFullName }}'
   YAML
 }
+
 data "aws_ami" "example" {
   most_recent = true
   owners      = ["amazon"]
@@ -336,6 +430,7 @@ data "aws_ami" "example" {
 resource "aws_imagebuilder_image_recipe" "example" {
   name         = "${local.uname}-imagebuilder-recipe"
   parent_image = data.aws_ami.example.id
+  # parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
   version      = "1.0.0"
 
   block_device_mapping {

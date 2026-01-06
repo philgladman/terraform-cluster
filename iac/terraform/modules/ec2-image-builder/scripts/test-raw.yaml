@@ -20,12 +20,12 @@ phases:
               echo "example 2 - fully file"
               echo "########################################"
 
-              echo "hello world from '{{ ScriptFullName }}'"
+              echo "hello world from {{ ScriptFullName }}"
               echo "ENV: ${ENV}"
 
               echo "done"
               exit 0
-            overwrite: false
+            overwrite: true
             owner: "root"
             group: "root"
             permissions: 0700
