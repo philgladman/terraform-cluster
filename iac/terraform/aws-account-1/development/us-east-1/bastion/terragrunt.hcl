@@ -36,7 +36,7 @@ dependencies {
 
 inputs = {
   resource_name              = "phil-${local.common.locals.env_name}"
-  bastion_ami                = "ami-06640050dc3f556bb"
+  bastion_ami                = "ami-068c0051b15cdb816"
   instance_type              = "t3.micro"
   bastion_subnet_id          = dependency.vpc.outputs.bastion_subnet_id
   master_ssh_key_name        = dependency.master-pem.outputs.master_ssh_key_name

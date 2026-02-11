@@ -65,7 +65,7 @@ resource "aws_vpc_endpoint" "s3_endpoint" {
 
 resource "aws_vpc_endpoint" "endpoint" {
   count        = length(var.endpoints)
-  service_name = "com.amazonaws.${var.region}.${var.endpoints[count.index]}"
+  service_name = var.endpoints[count.index] == "iam" ? "com.amazonaws.${var.endpoints[count.index]}" : "com.amazonaws.${var.region}.${var.endpoints[count.index]}"
   subnet_ids = [
     module.vpc.private_subnets[0]
   ]
