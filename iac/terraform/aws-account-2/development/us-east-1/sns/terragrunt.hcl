@@ -1,9 +1,9 @@
 
 locals {
-  common        = read_terragrunt_config(find_in_parent_folders("common.hcl"))
-  region        = read_terragrunt_config(find_in_parent_folders("region.hcl"))
-  rke2          = read_terragrunt_config(find_in_parent_folders("rke2.hcl"))
-  sns         = read_terragrunt_config(find_in_parent_folders("sns.hcl"))
+  common = read_terragrunt_config(find_in_parent_folders("common.hcl"))
+  region = read_terragrunt_config(find_in_parent_folders("region.hcl"))
+  rke2   = read_terragrunt_config(find_in_parent_folders("rke2.hcl"))
+  sns    = read_terragrunt_config(find_in_parent_folders("sns.hcl"))
 
 }
 
@@ -38,9 +38,9 @@ inputs = {
   sns_kms_key_id = local.sns.locals.sns_kms_key_id
 
   tags = {
-    Environment  = "${local.common.locals.env_name}"
-    Region       = "${local.region.locals.region}"
-    Developer    = "${local.common.locals.developer}"
+    Environment = "${local.common.locals.env_name}"
+    Region      = "${local.region.locals.region}"
+    Developer   = "${local.common.locals.developer}"
   }
 }
 

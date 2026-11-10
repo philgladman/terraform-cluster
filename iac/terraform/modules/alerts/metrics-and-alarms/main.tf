@@ -28,10 +28,11 @@ resource "aws_cloudwatch_metric_alarm" "this" {
   tags                = var.tags
 }
 
-resource "aws_lambda_permission" "this" {
-  statement_id  = var.name
-  action        = "lambda:InvokeFunction"
-  function_name = var.lambda_function_name
-  principal     = "lambda.alarms.cloudwatch.amazonaws.com"
-  source_arn    = aws_cloudwatch_metric_alarm.this.arn
-}
+## TODO Comment me in when VPC is created
+# resource "aws_lambda_permission" "this" {
+#   statement_id  = var.name
+#   action        = "lambda:InvokeFunction"
+#   function_name = var.lambda_function_name
+#   principal     = "lambda.alarms.cloudwatch.amazonaws.com"
+#   source_arn    = aws_cloudwatch_metric_alarm.this.arn
+# }

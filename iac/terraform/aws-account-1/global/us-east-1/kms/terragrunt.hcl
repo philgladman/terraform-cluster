@@ -1,8 +1,8 @@
 
 locals {
-  common        = read_terragrunt_config(find_in_parent_folders("common.hcl"))
-  region        = read_terragrunt_config(find_in_parent_folders("region.hcl"))
-  alerts        = read_terragrunt_config(find_in_parent_folders("alerts.hcl"))
+  common = read_terragrunt_config(find_in_parent_folders("common.hcl"))
+  region = read_terragrunt_config(find_in_parent_folders("region.hcl"))
+  alerts = read_terragrunt_config(find_in_parent_folders("alerts.hcl"))
 }
 
 include {
@@ -28,9 +28,9 @@ inputs = {
   attach_iam_kms_policy        = true
 
   tags = {
-    Environment  = "${local.common.locals.env_name}"
-    Region       = "${local.region.locals.region}"
-    Developer    = "${local.common.locals.developer}"
+    Environment = "${local.common.locals.env_name}"
+    Region      = "${local.region.locals.region}"
+    Developer   = "${local.common.locals.developer}"
   }
 }
 

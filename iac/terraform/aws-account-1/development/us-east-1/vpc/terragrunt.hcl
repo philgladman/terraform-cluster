@@ -19,8 +19,8 @@ inputs = {
   region        = local.region.locals.region
 
   tags = {
-    Environment  = "${local.common.locals.env_name}"
-    Region       = "${local.region.locals.region}"
-    Developer    = "${local.common.locals.developer}"
+    Environment = "${local.common.locals.env_name}"
+    Region      = "${local.region.locals.region}"
+    Developer   = "${local.common.locals.developer}"
   }
 }

@@ -1,11 +1,11 @@
 variable "resource_name" {
-  type = string
+  type    = string
   default = ""
 }
 
 variable "key_name" {
   description = "Alias of the key"
-  type = string
+  type        = string
 }
 
 variable "region" {
@@ -21,12 +21,12 @@ variable "description" {
 }
 
 variable "key_usage" {
-  type = string
+  type    = string
   default = "ENCRYPT_DECRYPT"
 }
 
 variable "create_key" {
-  type = bool
+  type    = bool
   default = true
 }
 
@@ -43,27 +43,27 @@ variable "policy" {
 }
 
 variable "deletion_window_in_days" {
-  type = string
+  type    = string
   default = 7
 }
 
 variable "is_enabled" {
-  type = bool
+  type    = bool
   default = true
 }
 
 variable "enable_key_rotation" {
-  type = bool
+  type    = bool
   default = true
 }
 
 variable "multi_region" {
-  type = bool
+  type    = bool
   default = false
 }
 
 variable "kms_policy" {
-  type = string
+  type    = string
   default = ""
 }
 

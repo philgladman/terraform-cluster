@@ -1,6 +1,6 @@
 locals {
-  cidr          = "10.4.0.0/16"
-  endpoints     = ["ec2", "ec2messages", "iam", "ssm", "ssmmessages", "kms"]
+  cidr      = "10.4.0.0/16"
+  endpoints = ["ec2", "ec2messages", "iam", "ssm", "ssmmessages", "kms"]
   # endpoints     = [
   #   "cloudformation",
   #   "cloudtrail",

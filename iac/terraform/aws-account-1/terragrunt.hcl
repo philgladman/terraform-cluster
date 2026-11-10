@@ -1,6 +1,6 @@
 locals {
-  region        = read_terragrunt_config(find_in_parent_folders("region.hcl"))
-  aws_region    = "${local.region.locals.region}"
+  region     = read_terragrunt_config(find_in_parent_folders("region.hcl"))
+  aws_region = "${local.region.locals.region}"
 }
 
 remote_state {

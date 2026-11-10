@@ -1,6 +1,6 @@
 locals {
-  common        = read_terragrunt_config(find_in_parent_folders("common.hcl"))
-  region        = read_terragrunt_config(find_in_parent_folders("region.hcl"))
+  common = read_terragrunt_config(find_in_parent_folders("common.hcl"))
+  region = read_terragrunt_config(find_in_parent_folders("region.hcl"))
 }
 
 include {
@@ -33,8 +33,8 @@ inputs = {
   kms_key_alias       = "alias/phil-global-general-key"
 
   tags = {
-    Environment  = "${local.common.locals.env_name}"
-    Region       = "${local.region.locals.region}"
-    Developer    = "${local.common.locals.developer}"
+    Environment = "${local.common.locals.env_name}"
+    Region      = "${local.region.locals.region}"
+    Developer   = "${local.common.locals.developer}"
   }
 }

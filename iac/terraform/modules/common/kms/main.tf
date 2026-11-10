@@ -25,7 +25,7 @@ data "aws_iam_policy_document" "combined" {
   count = var.create_key && local.attach_policy ? 1 : 0
 
   source_policy_documents = compact([
-    var.attach_iam_kms_policy  ? data.aws_iam_policy_document.iam_kms_policy[0].json : "",
+    var.attach_iam_kms_policy ? data.aws_iam_policy_document.iam_kms_policy[0].json : "",
     var.attach_sns_kms_policy ? data.aws_iam_policy_document.sns_kms_policy[0].json : "",
     var.attach_cloudwatch_kms_policy ? data.aws_iam_policy_document.cloudwatch_kms_policy[0].json : "",
     var.attach_cloudtrail_kms_policy ? data.aws_iam_policy_document.cloudtrail_kms_policy[0].json : "",
@@ -36,7 +36,7 @@ data "aws_iam_policy_document" "combined" {
 # KMS Policy for IAM Perms
 data "aws_iam_policy_document" "iam_kms_policy" {
   count = var.create_key && var.attach_iam_kms_policy ? 1 : 0
-  
+
   statement {
     sid = "Enable IAM User Permissions"
     principals {
@@ -52,15 +52,15 @@ data "aws_iam_policy_document" "iam_kms_policy" {
 # KMS Policy for SNS Perms
 data "aws_iam_policy_document" "sns_kms_policy" {
   count = var.create_key && var.attach_sns_kms_policy ? 1 : 0
-  
+
   statement {
     sid = "Allow Cloudwatch to use key for SNS"
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["cloudwatch.amazonaws.com"]
     }
-    effect    = "Allow"
-    actions   = [
+    effect = "Allow"
+    actions = [
       "kms:Decrypt",
       "kms:GenerateDataKey*",
     ]
@@ -71,15 +71,15 @@ data "aws_iam_policy_document" "sns_kms_policy" {
 # KMS Policy for Cloudwatch Perms
 data "aws_iam_policy_document" "cloudwatch_kms_policy" {
   count = var.create_key && var.attach_cloudwatch_kms_policy ? 1 : 0
-  
+
   statement {
     sid = "Allow Cloudwatch to use key"
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["logs.${var.region}.amazonaws.com"]
     }
-    effect    = "Allow"
-    actions   = [
+    effect = "Allow"
+    actions = [
       "kms:Encrypt*",
       "kms:Decrypt*",
       "kms:ReEncrypt*",
@@ -98,11 +98,11 @@ data "aws_iam_policy_document" "cloudwatch_kms_policy" {
 # KMS Policy for cloudtrail Perms
 data "aws_iam_policy_document" "cloudtrail_kms_policy" {
   count = var.create_key && var.attach_cloudtrail_kms_policy ? 1 : 0
-  
+
   statement {
     sid = "Allow CloudTrail to encrypt logs"
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["cloudtrail.amazonaws.com"]
     }
     effect    = "Allow"

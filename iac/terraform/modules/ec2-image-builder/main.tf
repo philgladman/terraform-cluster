@@ -212,12 +212,12 @@ resource "aws_imagebuilder_infrastructure_configuration" "example" {
   subnet_id                     = var.private_subnet_id
   terminate_instance_on_failure = true
 
-    logging {
-      s3_logs {
-        s3_bucket_name = aws_s3_bucket.example.bucket
-        s3_key_prefix  = "build-logs"
-      }
+  logging {
+    s3_logs {
+      s3_bucket_name = aws_s3_bucket.example.bucket
+      s3_key_prefix  = "build-logs"
     }
+  }
 
   tags = var.tags
 }
@@ -318,11 +318,11 @@ resource "aws_imagebuilder_component" "example3" {
   platform = "Linux"
   version  = "1.0.0"
   data = yamlencode({
-    name = "Test-component-just-script"
+    name        = "Test-component-just-script"
     description = "This is a test"
     constants = [{
       ScriptFullName = {
-        type = "string"
+        type  = "string"
         value = "/tmp/test.sh"
       }
     }]
@@ -337,12 +337,12 @@ resource "aws_imagebuilder_component" "example3" {
             owner       = "root"
             group       = "root"
             permissions = 0700
-            content        = templatefile("${path.module}/scripts/test.sh",
+            content = templatefile("${path.module}/scripts/test.sh",
               {
                 DATA = "example 3 - just script"
-                ENV = local.env
-              })
-            path     = "{{ ScriptFullName }}"
+                ENV  = local.env
+            })
+            path = "{{ ScriptFullName }}"
           }]
           onFailure = "Continue"
         },
@@ -364,7 +364,7 @@ resource "aws_imagebuilder_component" "example4" {
   name     = "${local.uname}-hello-world-4"
   platform = "Linux"
   version  = "1.0.0"
-  data     = <<-YAML
+  data = <<-YAML
     name: "Test-component-inline"
     description: "This is a test"
     schemaVersion: 1.0
@@ -381,12 +381,12 @@ resource "aws_imagebuilder_component" "example4" {
               - path: '{{ ScriptFullName }}'
                 content: |-
                   ${indent(14, templatefile(
-                    "${path.module}/scripts/test.sh",
-                    {
-                      DATA = "example 4 - inline with templatefile on script only"
-                      ENV = local.env
-                    }
-                  ))}
+  "${path.module}/scripts/test.sh",
+  {
+    DATA = "example 4 - inline with templatefile on script only"
+    ENV  = local.env
+  }
+))}
           - name: ExecuteTestScript
             action: ExecuteBash
             onFailure: Continue
@@ -431,7 +431,7 @@ resource "aws_imagebuilder_image_recipe" "example" {
   name         = "${local.uname}-imagebuilder-recipe"
   parent_image = data.aws_ami.example.id
   # parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.region}:aws:image/amazon-linux-2-x86/x.x.x"
-  version      = "1.0.0"
+  version = "1.0.0"
 
   block_device_mapping {
     device_name = "/dev/xvdb"

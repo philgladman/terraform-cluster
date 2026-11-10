@@ -38,9 +38,9 @@ inputs = {
   sns_kms_key_id = local.sns.locals.sns_kms_key_id
 
   tags = {
-    Environment  = "${local.common.locals.env_name}"
-    Region       = "${local.region.locals.region}"
-    Developer    = "${local.common.locals.developer}"
+    Environment = "${local.common.locals.env_name}"
+    Region      = "${local.region.locals.region}"
+    Developer   = "${local.common.locals.developer}"
   }
 }
 

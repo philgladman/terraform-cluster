@@ -1,8 +1,8 @@
 
 locals {
-  common        = read_terragrunt_config(find_in_parent_folders("common.hcl"))
-  region        = read_terragrunt_config(find_in_parent_folders("region.hcl"))
-  alerts        = read_terragrunt_config(find_in_parent_folders("alerts.hcl"))
+  common = read_terragrunt_config(find_in_parent_folders("common.hcl"))
+  region = read_terragrunt_config(find_in_parent_folders("region.hcl"))
+  alerts = read_terragrunt_config(find_in_parent_folders("alerts.hcl"))
 }
 
 include {
@@ -44,12 +44,12 @@ inputs = {
   topic_name     = local.alerts.locals.topic_name
   emails         = local.alerts.locals.emails
   sns_kms_key_id = local.alerts.locals.sns_kms_key_id
-  trail_name      = local.alerts.locals.trail_name
+  trail_name     = local.alerts.locals.trail_name
 
   tags = {
-    Environment  = "${local.common.locals.env_name}"
-    Region       = "${local.region.locals.region}"
-    Developer    = "${local.common.locals.developer}"
+    Environment = "${local.common.locals.env_name}"
+    Region      = "${local.region.locals.region}"
+    Developer   = "${local.common.locals.developer}"
   }
 }
 

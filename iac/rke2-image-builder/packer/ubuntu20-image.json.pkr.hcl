@@ -9,7 +9,7 @@ source "amazon-ebs" "ubuntu" {
   subnet_id            = "subnet-f838619e"
   ssh_username         = "ubuntu"
   tags = {
-    Name           = "3-hardened-packer-ubuntu-20"
+    Name = "3-hardened-packer-ubuntu-20"
   }
 }
 
@@ -17,19 +17,19 @@ build {
   sources = ["source.amazon-ebs.ubuntu"]
 
   provisioner "ansible" {
-      playbook_file    = "../ansible/rke2.yml"
-      ansible_env_vars = ["ANSIBLE_REMOTE_TEMP='/tmp/.ansible/'"]
-      extra_arguments  = ["-vv"]
-      user             = "ubuntu"
+    playbook_file    = "../ansible/rke2.yml"
+    ansible_env_vars = ["ANSIBLE_REMOTE_TEMP='/tmp/.ansible/'"]
+    extra_arguments  = ["-vv"]
+    user             = "ubuntu"
 
-    }
-
-  provisioner "shell" {
-    inline           = ["sudo oscap xccdf eval --fetch-remote-resources --profile xccdf_org.ssgproject.content_profile_ospp --results-arf /tmp/arf.xml --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel8-ds.xml && 2>/dev/null || exit 0"]
   }
 
   provisioner "shell" {
-    inline           = ["sudo chown ubuntu /tmp/arf.xml /tmp/report.html"]
+    inline = ["sudo oscap xccdf eval --fetch-remote-resources --profile xccdf_org.ssgproject.content_profile_ospp --results-arf /tmp/arf.xml --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel8-ds.xml && 2>/dev/null || exit 0"]
+  }
+
+  provisioner "shell" {
+    inline = ["sudo chown ubuntu /tmp/arf.xml /tmp/report.html"]
   }
 
   provisioner "file" {

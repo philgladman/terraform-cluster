@@ -323,6 +323,23 @@ resource "aws_iam_policy" "cloudtrail_role_policy" {
             "logs:PutLogEvents"
           ],
           "Resource" : "${aws_cloudwatch_log_group.alerts_log_group.arn}:log-stream:*"
+        },
+        {
+          "Effect" : "Allow"
+          "Action" : [
+            "kms:Encrypt",
+            "kms:ReEncrypt*",
+            "kms:Decrypt",
+            "kms:GenerateDataKey*",
+            "kms:Describe*"
+          ]
+          "Resource" : var.kms_key_arn
+
+          "Condition" : {
+            "StringEquals" : {
+              "kms:ViaService" : "logs.${var.region}.amazonaws.com"
+            }
+          }
         }
       ]
   })
